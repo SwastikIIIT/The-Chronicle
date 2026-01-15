@@ -7,6 +7,12 @@ import { handleSignout } from '@/helper/formcontrols/handleSignout';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
+const tabs = [
+        { id: '', label: 'Home', icon: Home },
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'settings', label: 'Settings', icon: Settings },
+    ];
+
 const Navbar = ({session}) => {
     const [activeTab, setActiveTab] = useState('home');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,14 +35,7 @@ const Navbar = ({session}) => {
       }
     }
 
-    const toggleMobileMenu = () => {
-        setMobileMenuOpen(!mobileMenuOpen);
-    };
-    const tabs = [
-        { id: '', label: 'Home', icon: Home },
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'settings', label: 'Settings', icon: Settings },
-    ];
+    const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
     return (
         <nav className="bg-black border-b border-purple-900/40">

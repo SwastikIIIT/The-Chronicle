@@ -7,19 +7,18 @@ import {
   } from "@/components/ui/alert-dialog"
 import { ArrowRight, TriangleAlert } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import React, { useState } from 'react'
+import React from 'react'
 
 
 const AuthBackend =() => {
        
     const search=useSearchParams();
     const auth=search.get("auth");
-    const handleCancel=()=>{
-        window.location.href="/auth-backend";
-    } 
-    const handleContinue=()=>{
-        window.location.href="/login";
-    } 
+    
+    const handleCancel=()=> window.location.href="/auth-backend";
+    
+    const handleContinue=()=> window.location.href="/login";
+    
 
   return (
     <>

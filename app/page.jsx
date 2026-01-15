@@ -1,17 +1,11 @@
 import { auth } from "@/auth";
-import { Hero } from "@/components/hero";
-import SignoutButton from "@/components/Signout";
 import { BackgroundPaths } from "@/components/ui/background-paths";
-import { Button } from "@/components/ui/button";
 import { SplashCursor } from "@/components/ui/splash-cursor";
-import { StarBorder } from "@/components/ui/star-border";
-import { handleSession } from "@/helper/formcontrols/handleCookieSession";
-import Link from "next/link";
 
 
 export default async function Home() {
    
-        const sessionUser=await auth();
+  const sessionUser=await auth();
    
   return (
     <div className="min-h-screen bg-black">
