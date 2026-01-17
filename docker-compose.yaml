@@ -1,0 +1,20 @@
+services:
+  dev-app:
+    build: 
+      context: .
+      dockerfile: dockerfiles/prod.dockerFile
+    container_name: auth-backend
+    # command: sh -c "pnpm install && pnpm start"cls  # Overwrite the CMD of dockerfile
+    env_file:
+      - .env
+    # volumes:
+    #   - .:/app     # Local repo(at path specfied) ko host machine ki (specified path) par dal deta hai
+    ports:          
+      - "3000:3000"   #👉 Host ↔ Container
+    networks:
+      - nextjs-app    #👉 Container ↔ Container
+
+networks:
+  nextjs-app:
+    
+    
