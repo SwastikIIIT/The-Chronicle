@@ -1,0 +1,14 @@
+services:
+  app:
+    image: ${IMAGE_NAME}
+    container_name: auth-backend
+    restart: always
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    networks:
+      - webapp
+
+networks:
+ webapp:
