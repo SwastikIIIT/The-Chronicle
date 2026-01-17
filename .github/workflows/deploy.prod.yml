@@ -69,7 +69,7 @@ jobs:
               export IMAGE_NAME="${{steps.login-ecr.outputs.registry}}/${{secrets.ECR_REPO}}:${{github.sha}}"
 
             # Use docker-compose to run container  
-              docker-compose up -f docker-compose.prod.yaml -d --pull always
+              docker-compose -f docker-compose.prod.yaml up -d --pull always
 
             # Remove unnecessary images
               docker image prune -f
