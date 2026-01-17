@@ -2,7 +2,7 @@
 FROM node:20-alpine
 
 # Enable pnpm via corepack (modern, official way)
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+RUN corepack enable 
 
 WORKDIR /app
 
