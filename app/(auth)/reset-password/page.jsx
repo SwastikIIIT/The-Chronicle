@@ -1,12 +1,13 @@
-"use client";
-import ResetPasswordContent from "@/components/ResetPasswordContent";
-import React from "react";
+import ResetPasswordContent from "@/components/auth/password/ResetPasswordContent";
+import React, { Suspense } from "react";
 
 const ResetPasswordPage = () => {
-  return 
-  (
-
-    <ResetPasswordContent/>);
+  
+  return (
+    <Suspense>
+      <ResetPasswordContent/>
+    </Suspense>
+  );
 };
 
 export default ResetPasswordPage;

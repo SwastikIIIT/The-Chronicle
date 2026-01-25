@@ -1,9 +1,9 @@
 "use client";
-import ResetPasswordForm from "@/components/ResetPasswordForm";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import React, { useEffect} from "react";
 import { toast } from "sonner";
+import ResetPasswordForm from "./ResetPasswordForm";
 
 const ResetPasswordContent  = () => {
   const search = useSearchParams();

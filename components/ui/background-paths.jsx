@@ -107,7 +107,7 @@ export function BackgroundPaths({ title}) {
                             hover:shadow-md hover:shadow-white/50"
                         >
                             <span className="opacity-90 group-hover:opacity-100 text-white transition-opacity cursor-pointer">
-                                <Link href="/auth-backend">Get Started</Link>
+                                <Link href="/home">Get Started</Link>
                             </span>
                             <span
                                 className="ml-3 text-white opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 

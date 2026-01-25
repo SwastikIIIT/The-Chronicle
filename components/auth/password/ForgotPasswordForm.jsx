@@ -1,12 +1,12 @@
 'use client'
 import React, { useState } from 'react'
-import { Label } from './ui/label';
-import { Button } from './ui/button';
+import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { Input } from './ui/input';
+import { Input } from '@/components/ui/input';
 import handleForgotPassword from '@/helper/formcontrols/handleForgotPassword';
 import { toast } from 'sonner';
 import { Mail, ArrowLeft, Send } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const ForgotPasswordForm = () => {
   
