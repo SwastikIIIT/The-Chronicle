@@ -1,10 +1,8 @@
-import TwoFactorComponent from '@/components/TwoFactor'
-import React from 'react'
+import TwoFactorComponent from "@/components/auth/TwoFactor";
+import React from "react";
 
 const TwoFactorPage = () => {
-  return (
-    <TwoFactorComponent/>
-  )
-}
+  return <TwoFactorComponent />;
+};
 
-export default TwoFactorPage
+export default TwoFactorPage;

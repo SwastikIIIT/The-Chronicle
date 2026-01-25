@@ -1,10 +1,10 @@
 "use client";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import Image from "next/image";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import startSetup from "@/helper/eventHandler/startSetup";
 import disable2FA from "@/helper/eventHandler/disable2FA";
 import { toast } from "sonner";
