@@ -8,8 +8,12 @@ import { toast } from "sonner";
 import { handleSignup } from "@/helper/formcontrols/handleSignup";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { EyeIcon } from "lucide-react";
+import { EyeOff } from "lucide-react";
+import { useState } from "react";
 
 const SignupForm = () => {
+  const [show,setShow]=useState(false);
   const router=useRouter();
   const signup = async (formData) => {
     const toastID = toast.loading("Signing up...");
@@ -99,11 +103,18 @@ const SignupForm = () => {
             <div className="relative">
               <Input
                 name="password"
-                type="password"
-                placeholder="••••••"
+                type={show ? "text" : "password" }  
+                placeholder="*********"
                 required
                 className="pl-3 pr-3 py-2 bg-black/40 border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder:text-gray-500"
               />
+             <button
+                type="button"
+                onClick={() => setShow(prev => !prev)}
+                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+              >
+                {show ? <EyeOff size={20} /> : <EyeIcon size={20} />}
+              </button>
             </div>
           </div>
 

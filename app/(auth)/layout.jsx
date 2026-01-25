@@ -49,7 +49,7 @@ const AuthLayout = ({ children }) => {
           <Image src="/logo.svg" width={40} height={40} alt="Logo" />
           <Link href="/home" className="relative group">
             <span className="font-bold text-2xl lg:text-2xl xl:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-100">
-              Auth Backend
+              The Chronicle
             </span>
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 group-hover:w-full transition-all duration-300"></span>
           </Link>
