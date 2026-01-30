@@ -2,47 +2,89 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import { Activity, Clock, UserCircle, Calendar, Mail, Key, Shield, MapPin, AlertCircle } from "lucide-react";
+import { Activity, Clock, UserCircle, Calendar, Mail, Key, Shield, MapPin, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import fetchUserInfo from "@/helper/eventHandler/fetchUserInfo";
 import { calculateAccountAge, formatDate, formatDateTime, timeAgo } from "@/utils/formatter";
+import { Laptop2 } from "lucide-react";
+import SecurityHealth from "./CircularProgress";
+import LoginActivityGraph from "./Graph";
 
 const Dashboard = ({session}) => {
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState(null); 
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(()=>{
     const fetchUser=async()=>{
-      const toastID = toast.loading("Processing request...");
+      setIsLoading(true);
         try {
             const result = await fetchUserInfo();
             console.log('Result:',result);
             if(result.success) {
-              toast.success("Loading successful", {id: toastID, description: result.message})
+              toast.success("Success", { description: result.message})
               setUserInfo(result.userData);
             } 
             else
-              toast.error("Loading unsuccessful", {id: toastID, description: result.message});
+              toast.error("Error", {description: result.message});
         }
         catch(err){
           console.log(err);
-          toast.error("Loading unsuccessful", {id: toastID, description: "Failed to load user data"})
+          toast.error("Loading unsuccessful", {description: err?.message || "Failed to load user data"})
         }
         finally{
-          setTimeout(() => {
-            toast.dismiss(toastID);
-          },2000)
+          setIsLoading(false);
         }
     }
     fetchUser();
   }, [session]);
 
   const lastDeviceInfo=(loginHistory)=>{
-    const index=loginHistory.length-1;
-    console.log('Last Device Info:',loginHistory[index]);
-    return `${loginHistory[index].device} from ${location.city},${location.country}`;
+    const recentLogin=loginHistory[loginHistory.length-1];
+    return `${recentLogin.device} from ${recentLogin.location.city},${recentLogin.location.country} approx`;
   }
 
+  const greeting=()=>{
+    const hour=new Date().getHours();
+    if(hour>=12 && hour<=18) return `Good Afternoon, ${userInfo?.username}`;
+    else if(hour>18 && hour<=24) return `Good Evening, ${userInfo?.username}`;
+    else if(hour>24) return `Good Morning, ${userInfo?.username}`;
+  }
+
+  const calculateSecurityScore=(userInfo)=>{
+    if(!userInfo) return 0;
+    let score=0;
+    if(userInfo?.isVerified) score+=20;
+    if(userInfo?.twoFactor?.enabled) score+=40;
+    if(calculateAccountAge(userInfo?.passwordLastChanged)<90) score+=20;
+    const recentFailures=userInfo?.loginHistory?.slice(0,5).filter(v=>!v.success).length;
+    if(recentFailures === 0) score+=20;
+
+    return score;
+  }
+
+  const getSecurityLevel = (score) => {
+    if (score >= 80) return { level: "Excellent", color: "green", description: "Your account security is excellent" };
+    if (score >= 60) return { level: "Good", color: "blue", description: "Your account security is good" };
+    if (score >= 40) return { level: "Fair", color: "yellow", description: "Consider improving your security" };
+    return { level: "Poor", color: "red", description: "Immediate action required" };
+  };
    
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center z-50">
+        <motion.div
+          className="h-12 w-12 rounded-full border-4 border-purple-900/30 border-t-purple-500"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        {/* Optional: Keep the text if you want, or remove it for total minimalism */}
+        <p className="mt-4 text-purple-500/80 font-mono text-sm animate-pulse">
+          Loading...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black pb-16">
       <div className="relative z-0 overflow-hidden">
@@ -56,7 +98,7 @@ const Dashboard = ({session}) => {
         className="container mx-auto pt-12 px-4 relative z-10"
       >
         <h1 className="text-3xl md:text-4xl text-white font-bold mb-8 border-b border-purple-900/40 pb-4">
-           Dashboard
+           {greeting()}
         </h1>
 
        
@@ -154,14 +196,7 @@ const Dashboard = ({session}) => {
                   </div>
                 </div>
                 
-                <div className="mt-6 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Email Verified</span>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${userInfo?.isVerified ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
-                      {userInfo?.isVerified ? "Verified" : "Pending"}
-                    </span>
-                  </div>
-                  
+                <div className="mt-6 space-y-4">                  
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300">Two-Factor Authentication</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${userInfo?.twoFactor?.enabled ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
@@ -226,8 +261,8 @@ const Dashboard = ({session}) => {
                   
                   {userInfo?.loginHistory.length>0 && (
                     <div className="flex items-start bg-purple-900/10 p-3 rounded border border-purple-900/30">
-                      <div className="mt-1 rounded-full p-1 bg-blue-500/20 mr-3">
-                        <Shield size={14} className="text-blue-400" />
+                      <div className="mt-1 rounded-full p-1 bg-yellow-500/20 mr-3">
+                        <Laptop2 size={14} className="text-yellow-400" />
                       </div>
                       <div>
                         <p className="text-white text-sm">Last Device</p>
@@ -305,6 +340,7 @@ const Dashboard = ({session}) => {
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.5 }}
+          className="mb-8"
         >
           <Card className="bg-black border border-purple-900/40 shadow-lg hover:shadow-purple-900/20 transition-all">
             <CardHeader className="border-b border-purple-900/30">
@@ -376,29 +412,6 @@ const Dashboard = ({session}) => {
                       : "Please verify your email for additional security."}
                   </p>
                 </div>
-
-               {/* Password Strength */}
-                {/* <div className="bg-purple-900/10 rounded-lg p-4 border border-purple-900/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-white font-medium">Password Strength</h3>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      userInfo?.passwordStrength === 'Strong'
-                        ? "bg-green-500/20 text-green-400" 
-                        : userInfo?.passwordStrength === 'Moderate'
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : "bg-red-500/20 text-red-400"
-                    }`}>
-                      {userInfo?.passwordStrength}
-                    </span>
-                  </div>
-                  <p className="text-gray-400 text-sm">
-                    {userInfo?.passwordStrength === 'Strong'
-                      ? "Your password is strong and secure." 
-                      : userInfo?.passwordStrength === 'Moderate'
-                        ? "Your password has moderate security. Consider strengthening it."
-                        : "Your password is weak. Update it to improve security."}
-                  </p>
-                </div> */}
                 
                 {/* Device Information */}
                 <div className="bg-purple-900/10 rounded-lg p-4 border border-purple-900/30">
@@ -418,6 +431,134 @@ const Dashboard = ({session}) => {
             </CardContent>
           </Card>
         </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 items-stretch">
+          {/* Security Health */}
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="h-full" 
+          >
+            <Card className="bg-black border border-purple-900/40 shadow-lg hover:shadow-purple-900/20 transition-all overflow-hidden h-full flex flex-col">
+              <div className="absolute top-0 right-0 bg-purple-600/10 rounded-full -translate-y-32 translate-x-32 blur-3xl pointer-events-none" />
+              
+              <CardHeader className="border-b border-purple-900/30 relative z-10 pb-4">
+                <div className="flex items-center space-x-3">
+                  <Shield size={22} className="text-purple-500" />
+                  <div>
+                    <CardTitle className="text-white">Security Health</CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Security assessment & recommendations
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-6 relative z-10 flex-1">
+                <div className="flex flex-col xl:flex-row gap-8 items-center h-full justify-center">
+                  {/* Left: Circular Progress & Score */}
+                  <div className="flex flex-col items-center justify-center flex-shrink-0">
+                    <SecurityHealth score={calculateSecurityScore(userInfo)} />
+                    <div className="text-center mt-4">
+                      <h3 className={`text-2xl font-bold ${
+                        getSecurityLevel(calculateSecurityScore(userInfo)).color === "green" ? "text-green-400" :
+                        getSecurityLevel(calculateSecurityScore(userInfo)).color === "blue" ? "text-blue-400" :
+                        getSecurityLevel(calculateSecurityScore(userInfo)).color === "yellow" ? "text-yellow-400" :
+                        "text-red-400"
+                      }`}>
+                        {getSecurityLevel(calculateSecurityScore(userInfo)).level}
+                      </h3>
+                      <p className="text-gray-500 text-xs mt-1">
+                        Security Score
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right: Recommendations List */}
+                  <div className="flex-1 w-full xl:w-auto xl:border-l xl:border-purple-900/30 xl:pl-8 flex flex-col justify-center">
+                    <h4 className="text-gray-300 font-medium mb-3 flex items-center gap-2 text-sm uppercase tracking-wider">
+                      <AlertCircle size={14} className="text-purple-400" />
+                      Action Items
+                    </h4>
+                    
+                    {calculateSecurityScore(userInfo) === 100 ? (
+                      <div className="flex items-center gap-3 text-green-400 bg-green-900/10 p-3 rounded-lg border border-green-900/30">
+                          <div className="bg-green-500/20 p-1 rounded-full"><Shield size={16} /></div>
+                          <span className="text-sm">Great job! Your account is fully secured.</span>
+                      </div>
+                    ) : (
+                      <ul className="space-y-3">
+                        {!userInfo?.isVerified && (
+                          <li className="flex items-start gap-3 text-sm text-gray-400 group">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0 group-hover:bg-red-400 transition-colors" />
+                            <span>Verify email address</span>
+                          </li>
+                        )}
+                        {!userInfo?.twoFactor?.enabled && (
+                          <li className="flex items-start gap-3 text-sm text-gray-400 group">
+                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0 group-hover:bg-yellow-400 transition-colors" />
+                            <span>Enable 2FA authentication</span>
+                          </li>
+                        )}
+                        {calculateAccountAge(userInfo?.passwordLastChanged) >= 90 && (
+                          <li className="flex items-start gap-3 text-sm text-gray-400 group">
+                            <span className="h-1.5 w-1.5 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                            <span>Rotate old password ({`>`}90 days)</span>
+                          </li>
+                        )}
+                        {userInfo?.loginHistory?.slice(0,5).filter(v=>!v.success).length > 0 && (
+                          <li className="flex items-start gap-3 text-sm text-gray-400 group">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                            <span>Review recent failed logins</span>
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* 2. Login Trends Graph Card */}
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+            className="h-full" // Ensure div takes full height
+          >
+            <Card className="bg-black border border-purple-900/40 shadow-lg hover:shadow-purple-900/20 transition-all h-full flex flex-col">
+              <CardHeader className="border-b border-purple-900/30 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Activity size={22} className="text-purple-500" />
+                    <div>
+                      <CardTitle className="text-white">Login Activity</CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Traffic over last 7 days
+                      </CardDescription>
+                    </div>
+                  </div>
+                  {/* Badge aligned with header */}
+                  <div className="bg-purple-900/10 px-3 py-1 rounded-full border border-purple-500/20 flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+                      <span className="text-xs font-medium text-purple-300">
+                        {userInfo?.loginHistory?.length || 0} Events
+                      </span>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              {/* Flex-1 ensures the graph container expands to fill the remaining height matching the neighbor card */}
+              <CardContent className="pt-6 flex-1 min-h-[250px] flex flex-col justify-center">
+                <LoginActivityGraph loginHistory={userInfo?.loginHistory} />
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+        </div>
       </motion.div>
     </div>
   );
