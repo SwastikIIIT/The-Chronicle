@@ -1,22 +1,24 @@
+'use server'
+import { auth } from "@/auth";
 
 const startSetup =async() => {
    try
    {
-        const data=await fetch("/api/auth/setup-2a");
-        const response=await data.json();
+        const { user } = await auth();
+        console.log('User:',user);
+        const data=await fetch(`${process.env.BACKEND_URL}/api/auth/user/${user.id}/2fa/setup`);
+        const res=await data.json();
 
-        if(response?.success)
-        {
-             return{success:true,secret:response.secret,qr:response.qr}
-        }
+        if(res.ok)
+        return { success: true, qr:response.qr };
+        
         else
-        {
-             return {success:false,message:response.message};
-        }
+         return { success: false, error:response.message };
+        
    }
    catch(err)
    {
-      return {success:false,message:"Could not connect to server"};
+      return {success:false,message: err.message || "Could not connect to server"};
    }
 }
 

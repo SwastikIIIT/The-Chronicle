@@ -6,6 +6,7 @@ import { SplashCursor } from "@/components/ui/splash-cursor";
 export default async function Home() {
    
   const sessionUser=await auth();
+  console.log("Session:",sessionUser);
    
   return (
     <div className="min-h-screen bg-black">

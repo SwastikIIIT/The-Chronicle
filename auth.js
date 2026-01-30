@@ -23,87 +23,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
 
       async authorize(credentials,req) {
-            
-        const email = credentials?.email;
-        const password = credentials?.password;
-        const twoFAcode=credentials?.twoFactorToken;
+          const userAgent = req.headers.get("user-agent");
+          const ip = req.headers.get("x-forwarded-for");
+          const res=await fetch(`${process.env.BACKEND_URL}/api/auth/login`,{
+              method:'POST',
+              headers:{
+                'Content-type':'application/json',
+                'User-Agent': userAgent, 
+              },
+              body:JSON.stringify({
+                  email: credentials.email,
+                  password: credentials.password,
+                  twoFactorToken: credentials?.twoFactorToken
+              })
+          })
 
-        const response = await fetch('https://api.ipify.org?format=json');
-        const ipAddress=await response.json();
-        
-        // console.log(ipAddress?.ip);
-       
-        console.log("Credentials received:",[email,password,twoFAcode]);
-
-        if(!email || !password)
-            throw new Error("Missing credentials");
-
-        //connect to database
-        await connectToMongo();
-
-        const user=await User.findOne({email: email}).select('+password');
-        console.log("User found:", user);
-        if(!user)
-            throw new Error("User not found in database");
-         
-        const isMatch=await compare(password,user.password);
-        console.log("Password match:", isMatch);
-        
-        //representing failed login for that email
-        if(!isMatch)
-        {
-           await recordLoginHistory(user,ipAddress?.ip,false);
-           await user.save();
-           throw new Error("Invalid Password");
+          const result=await res.json();
+          if(!res.ok) throw new Error(result.message)
+          console.log('result:',result);
+          return result;
         }
-
-        if(user.twoFactorEnabled)
-        {
-          console.log("2FA is enabled for the user");
-          console.log("Two Factor Code received:", twoFAcode);
-          if(!twoFAcode)
-            {
-              console.log("Two Factor Code is required cccscascascc");
-              throw new Error("2FA_REQUIRED");
-           }
-          //  verify 2FA CODE
-          const verified=speakeasy.totp.verify({
-            secret:user?.twoFactorSecret,
-            encoding:"base32",
-            token:twoFAcode,
-            window:1
-          });
-
-          //representing failed login via 2fa code
-           if(!verified)
-           {
-              await recordLoginHistory(user,ipAddress?.ip,false);
-              await user.save();
-              throw new Error("Invalid Two Factor Code");
-           }
-        }
-
-
-        //successful login
-        await recordLoginHistory(user,ipAddress?.ip,true);
-        user.lastLogin=new Date();
-        await user.save();
-       
-        console.log("User after updation",user);
-        return {
-          id: user?._id.toString(),
-          email: user?.email,
-          name: user?.username,
-          lastLogin:user?.lastLogin,
-          image:user?.image,
-          passwordLastChanged:user?.passwordLastChanged,
-          hasTwoFactor: user?.twoFactorEnabled
-        };
-      } 
-  })],
-  pages: {
-    signIn:'/login',
-  },
+   }) 
+  ],
+  pages: { signIn:'/login' },
   cookies: {
     sessionToken: {
       name: `authjs.session-token`,
@@ -115,9 +57,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
     }
   },
-  session:{
-    strategy:"jwt"
-  },
+  session:{ strategy:"jwt" },
   callbacks: {
     async signIn({user,account,profile})
     {
@@ -175,7 +115,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     {
         if(user)
         {
-           token.id=user?.id;
+           token.id=user?.userId;
            token.hasTwoFactor=user?.hasTwoFactor;
            token.email = user?.email;  
            token.name = user?.name;

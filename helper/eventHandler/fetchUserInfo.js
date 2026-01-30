@@ -1,21 +1,35 @@
-const fetchUserInfo=async()=>{
-      try{
-           const data=await fetch("/api/auth/user-info");
-           const response=await data.json();
-           if(response.success)
-           {
-                return {success:true,userData:response.user,message:response.message};
-           }
-           else
-           {
-                return {success:false,message:response.message};
-           }
-      }
-      catch(err)
-      {
-           console.log(err); 
-           return {success:false,message:"Could not load User Info from database"}
-      }
-}
+'use server'
+import { cookies } from "next/headers";
 
-export default fetchUserInfo
+const fetchUserInfo = async () => {
+  try {
+    const Cookies= await cookies();
+    const cookie = Cookies.get("backend_token")?.value;
+
+    const response = await fetch(`${process.env.BACKEND_URL}/api/auth/user`,{
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+           Cookie: `backend_token=${cookie}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+   
+    if (!response.ok) return { success: false, message: data.message };
+
+    return {
+      success: true,
+      userData: data.user,
+      auditTrail: data.loginHistory,
+      message: data.message,
+    };
+  } 
+  catch (err) {
+    console.error(err);
+    return { success: false, message: err.message || "Could not load user info"};
+  }
+};
+
+export default fetchUserInfo;

@@ -15,12 +15,13 @@ import { useState } from "react";
 const SignupForm = () => {
   const [show,setShow]=useState(false);
   const router=useRouter();
+  
   const signup = async (formData) => {
     const toastID = toast.loading("Signing up...");
     try {
       const result = await handleSignup(formData);
 
-      if (result.ok === "success")
+      if (result.success)
         toast.success(result.message, {
           id: toastID,
           description: "Your account has been successfully created. Welcome!",

@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-
 export const Hero = React.forwardRef((props, ref) => {
   const {
     className,
@@ -24,7 +23,7 @@ export const Hero = React.forwardRef((props, ref) => {
       ref={ref}
       className={cn(
         "relative z-0 flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden rounded-md bg-black",
-        className
+        className,
       )}
       {...rest}
     >
@@ -103,7 +102,7 @@ export const Hero = React.forwardRef((props, ref) => {
           <h1
             className={cn(
               "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white",
-              titleClassName
+              titleClassName,
             )}
           >
             {title}
@@ -117,11 +116,18 @@ export const Hero = React.forwardRef((props, ref) => {
             <div className={cn("flex gap-4", actionsClassName)}>
               {actions.map((action, index) => (
                 <Link key={index} href={action.href}>
-                <Button  variant={"default"} className="bg-purple-600 hover:bg-purple-700">
-                {action.label}
-                  <span  className="ml-3  text-white opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
-                  transition-all duration-300">→</span>
-                </Button>
+                  <Button
+                    variant={"default"}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {action.label}
+                    <span
+                      className="ml-3  text-white opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
+                  transition-all duration-300"
+                    >
+                      →
+                    </span>
+                  </Button>
                 </Link>
               ))}
             </div>

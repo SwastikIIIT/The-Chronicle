@@ -1,10 +1,11 @@
+import { auth } from '@/auth';
 import Dashboard from '@/components/Dashboard'
 import React from 'react'
 
-const DashboardPage=() => {
-   
+const DashboardPage=async() => {
+  const session=await auth();
   return (
-    <Dashboard/>
+    <Dashboard session={session}/>
   )
 }
 

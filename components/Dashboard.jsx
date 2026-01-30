@@ -1,34 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import { Activity, Clock, UserCircle, Calendar, Mail, Key, Shield, MapPin, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import fetchUserInfo from "@/helper/eventHandler/fetchUserInfo";
+import { calculateAccountAge, formatDate, formatDateTime, timeAgo } from "@/utils/formatter";
 
-const DashboardPage = () => {
-  const {data:session} = useSession();
+const Dashboard = ({session}) => {
   const [userInfo, setUserInfo] = useState(null);
-  
 
   useEffect(()=>{
     const fetchUser=async()=>{
       const toastID = toast.loading("Processing request...");
         try {
-          const result = await fetchUserInfo();
-            if(result.success)
-            {
+            const result = await fetchUserInfo();
+            console.log('Result:',result);
+            if(result.success) {
               toast.success("Loading successful", {id: toastID, description: result.message})
               setUserInfo(result.userData);
             } 
             else
-            {
               toast.error("Loading unsuccessful", {id: toastID, description: result.message});
-            }
         }
-        catch(err)
-        {
+        catch(err){
           console.log(err);
           toast.error("Loading unsuccessful", {id: toastID, description: "Failed to load user data"})
         }
@@ -41,55 +36,12 @@ const DashboardPage = () => {
     fetchUser();
   }, [session]);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-  
-  const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-  
-  const calculateAccountAge = (createdAt) => {
-    const created = new Date(createdAt);
-    const now = new Date();
-    const diffTime = Math.abs(now-created);
-    const diffDays = Math.ceil(diffTime/(1000*60*60*24));
-    return diffDays;
-  };
+  const lastDeviceInfo=(loginHistory)=>{
+    const index=loginHistory.length-1;
+    console.log('Last Device Info:',loginHistory[index]);
+    return `${loginHistory[index].device} from ${location.city},${location.country}`;
+  }
 
-  const timeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    
-    let interval = Math.floor(seconds / 2592000);
-    if (interval >= 1) return interval + " month" + (interval === 1 ? "" : "s") + " ago";
-    
-    interval = Math.floor(seconds / 86400);
-    if (interval >= 1) return interval + " day" + (interval === 1 ? "" : "s") + " ago";
-    
-    interval = Math.floor(seconds / 3600);
-    if (interval >= 1) return interval + " hour" + (interval === 1 ? "" : "s") + " ago";
-    
-    interval = Math.floor(seconds / 60);
-    if (interval >= 1) return interval + " minute" + (interval === 1 ? "" : "s") + " ago";
-    
-    return Math.floor(seconds) + " second" + (Math.floor(seconds) === 1 ? "" : "s") + " ago";
-  };
-
-   console.log("User Info:",userInfo);
    
   return (
     <div className="min-h-screen bg-black pb-16">
@@ -158,8 +110,8 @@ const DashboardPage = () => {
                         <div className="flex items-center justify-center md:justify-start gap-2">
                           <Key size={16} className="text-purple-500 flex-shrink-0" />
                           <span className="text-gray-300">2FA Status:</span>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${userInfo?.twoFactorEnabled ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
-                            {userInfo?.twoFactorEnabled ? "Enabled" : "Disabled"}
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${userInfo?.twoFactor?.enabled ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                            {userInfo?.twoFactor?.enabled ? "Enabled" : "Disabled"}
                           </span>
                         </div>
                       </div>
@@ -212,8 +164,8 @@ const DashboardPage = () => {
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300">Two-Factor Authentication</span>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${userInfo?.twoFactorEnabled ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
-                      {userInfo?.twoFactorEnabled ? "Enabled" : "Disabled"}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${userInfo?.twoFactor?.enabled ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                      {userInfo?.twoFactor?.enabled ? "Enabled" : "Disabled"}
                     </span>
                   </div>
                   
@@ -240,13 +192,13 @@ const DashboardPage = () => {
                   <Activity size={22} className="text-purple-500" />
                   <div>
                     <CardTitle className="text-white">Recent Activity</CardTitle>
-                    <CardDescription className="text-gray-400">
+                    <CardDescription className="text-gray-400 ">
                       Your latest account activities
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="pt-3">
                 <div className="space-y-4">
                   {userInfo?.lastLogin && (
                     <div className="flex items-start bg-purple-900/10 p-3 rounded border border-purple-900/30">
@@ -254,7 +206,7 @@ const DashboardPage = () => {
                         <Key size={14} className="text-green-400" />
                       </div>
                       <div>
-                        <p className="text-white text-sm">Successful login</p>
+                        <p className="text-white text-sm">Last login</p>
                         <p className="text-gray-400 text-xs">{formatDateTime(userInfo?.lastLogin)}</p>
                       </div>
                     </div>
@@ -272,11 +224,17 @@ const DashboardPage = () => {
                     </div>
                   )}
                   
-                  {!userInfo?.loginHistory? (
-                    <div className="text-center py-6">
-                      <p className="text-gray-400">No recent activity to display</p>
+                  {userInfo?.loginHistory.length>0 && (
+                    <div className="flex items-start bg-purple-900/10 p-3 rounded border border-purple-900/30">
+                      <div className="mt-1 rounded-full p-1 bg-blue-500/20 mr-3">
+                        <Shield size={14} className="text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-white text-sm">Last Device</p>
+                        <p className="text-gray-400 text-xs">{lastDeviceInfo(userInfo?.loginHistory)}</p>
+                      </div>
                     </div>
-                  ) : null}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -318,9 +276,9 @@ const DashboardPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {userInfo?.loginHistory?.slice(5,10).map((item,key)=>(
+                      {userInfo?.loginHistory?.slice(0,5).map((item,key)=>(
                         <tr key={key} className="border-b border-purple-900/10">
-                          <td className="py-3 text-gray-300 text-sm">{formatDateTime(item.timestamp)}</td>
+                          <td className="py-3 text-gray-300 text-sm">{formatDateTime(item.createdAt)}</td>
                           <td className="py-3 text-gray-300 text-sm">
                             <div className="flex items-center">
                               <MapPin size={14} className="text-purple-500 mr-1" />
@@ -420,7 +378,7 @@ const DashboardPage = () => {
                 </div>
 
                {/* Password Strength */}
-                <div className="bg-purple-900/10 rounded-lg p-4 border border-purple-900/30">
+                {/* <div className="bg-purple-900/10 rounded-lg p-4 border border-purple-900/30">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="text-white font-medium">Password Strength</h3>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -440,10 +398,10 @@ const DashboardPage = () => {
                         ? "Your password has moderate security. Consider strengthening it."
                         : "Your password is weak. Update it to improve security."}
                   </p>
-                </div>
+                </div> */}
                 
                 {/* Device Information */}
-                {/* <div className="bg-purple-900/10 rounded-lg p-4 border border-purple-900/30">
+                <div className="bg-purple-900/10 rounded-lg p-4 border border-purple-900/30">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="text-white font-medium">Active Devices</h3>
                     <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
@@ -455,7 +413,7 @@ const DashboardPage = () => {
                   <p className="text-gray-400 text-sm">
                     Detected login from {userInfo?.loginHistory?.[0]?.userAgent?.split(' ')[0] || 'Unknown'} device.
                   </p>
-                </div> */}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -465,4 +423,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
+export default Dashboard;

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import {decode,encode} from "next-auth/jwt";
 import { cookies } from "next/headers";
 
+
 export const handleSession=async()=>{
   try{
     const session=await auth();
@@ -15,7 +16,7 @@ export const handleSession=async()=>{
   }
 }
 
-export const handleCookie=async()=>{
+export const handleCookie = async(cookie)=>{
  
 
     const cook=(await cookies()).get("authjs.session-token");

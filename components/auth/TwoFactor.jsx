@@ -39,6 +39,7 @@ const TwoFactorComponent = () => {
   const router = useRouter();
   const [step, setStep] = useState("initial");
   const [secret, setSecret] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [qrcode, setQrcode] = useState("");
   const [hasTwoFactor, setHasTwoFactor] = useState(false);
 
@@ -68,6 +69,7 @@ const TwoFactorComponent = () => {
           id: toastID,
           description: result.message,
         });
+        setRecoveryCodes(result.recoveryCodes || [])
         setHasTwoFactor(true);
         setStep("success");
       } else {
@@ -144,7 +146,7 @@ const TwoFactorComponent = () => {
       }, 5000);
     }
   };
-  console.log("Has Two Factor", hasTwoFactor);
+ 
   return (
     <div className="flex flex-col gap-6 w-full max-w-md mx-auto">
       <div className="flex flex-col items-center gap-2 text-center mb-6">
@@ -320,7 +322,36 @@ const TwoFactorComponent = () => {
               from your authenticator app when logging in.
             </p>
           </div>
-
+          
+          {recoveryCodes.length > 0 && (
+              <div className="bg-orange-500/5 p-5 rounded-xl border border-orange-500/20">
+                <div className="flex items-center gap-2 mb-3 text-orange-400">
+                    <AlertCircle size={18} />
+                    <span className="font-semibold text-sm">Save your recovery codes!</span>
+                </div>
+                <p className="text-xs text-gray-400 mb-4">
+                    If you lose your phone, these are the ONLY way to access your account.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                    {recoveryCodes.map((code, i) => (
+                      <div key={i} className="bg-black/40 p-2 rounded border border-white/5 font-mono text-xs text-center text-gray-200">
+                        {code}
+                      </div>
+                    ))}
+                </div>
+                <Button 
+                    variant="outline" 
+                    className="w-full mt-4 text-xs border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                    onClick={() => window.print()} // Quick way for user to save
+                  >
+                    Print or Save Codes
+                </Button>
+              </div>)}
+            
+            <Link href="/home/settings" className="w-full">
+                <Button className="w-full bg-purple-600 hover:bg-purple-700">Finished</Button>
+            </Link>
+         
           <div className="bg-black/40 p-5 rounded-lg border border-purple-900/40">
             <h3 className="font-medium text-gray-300 mb-2 flex items-center gap-2">
               <AlertCircle size={16} className="text-purple-400" />
