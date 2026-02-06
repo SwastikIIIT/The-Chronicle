@@ -6,7 +6,6 @@ export async function middleware(req) {
   const frontendCookie = req.cookies.get("authjs.session-token");
   const backendCookie = req.cookies.get("backend_token");
 
-
   if (!frontendCookie) {
     const loginURL = new URL("/home", req.url);
     loginURL.searchParams.set("auth", "required");
@@ -33,7 +32,7 @@ export async function middleware(req) {
               .setExpirationTime("7d")
               .sign(secret);
 
-            const response=NextResponse.next();
+            const response = NextResponse.next();
             response.cookies.set("backend_token",simpleToken,{
               httpOnly:true,
               secure: process.env.NODE_ENV==='production',
@@ -53,5 +52,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/home/dashboard/:path*", "/home/settings/:path*"],
+  matcher: ["/home/dashboard/:path*", "/home/settings/:path*","/home/vault/:path*"],
 };

@@ -1,8 +1,9 @@
+import { auth } from "@/auth";
 import TwoFactorComponent from "@/components/auth/TwoFactor";
-import React from "react";
 
-const TwoFactorPage = () => {
-  return <TwoFactorComponent />;
+const TwoFactorPage = async () => {
+  const session = await auth();
+  return <TwoFactorComponent session={session}/>;
 };
 
 export default TwoFactorPage;

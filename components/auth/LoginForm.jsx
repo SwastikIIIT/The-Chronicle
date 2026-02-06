@@ -3,14 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { handleLogin } from "@/helper/formcontrols/handleLogin";
-import { handleAuth } from "@/helper/formcontrols/handleAuth";
+import { handleLogin } from "@/server/providers/handleLogin";
+import { handleAuth } from "@/server/providers/handleAuth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Mail, Lock, Key, AlertCircle, ArrowRight } from "lucide-react";
+import { Mail, Lock, Key, ArrowRight } from "lucide-react";
+import { EyeOff } from "lucide-react";
+import { EyeIcon } from "lucide-react";
 
 const LoginForm = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const [show2faField, set2faField] = useState(false);
   const router = useRouter();
 
@@ -112,11 +115,18 @@ const LoginForm = () => {
             <div className="relative">
               <Input
                 name="password"
-                type="password"
-                placeholder="••••••"
+                type={showPassword ? "text" : "password"}
+                placeholder="*********"
                 required
                 className="pl-3 pr-3 py-2 bg-black/40 border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder:text-gray-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+              >
+                {showPassword ? <EyeOff size={20} /> : <EyeIcon size={20} />}
+              </button>
             </div>
           </div>
 

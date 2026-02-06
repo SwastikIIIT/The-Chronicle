@@ -5,23 +5,19 @@ import { cn } from "@/lib/utils";
 
 const testimonials = [
   {
-    quote:
-      "This authentication system has transformed how we handle user security. The implementation was seamless and our users love the experience.",
-    author: "Alex Morgan",
-    role: "CTO, TechSolutions Inc.",
+    quote: "Integrating blockchain technology to create an immutable, decentralized storage layer. This architecture will ensure zero-knowledge verification and provide a tamper-proof audit trail for enterprise compliance, preventing centralized data manipulation.",
+    author: "Blockchain",
   },
   {
-    quote:
-      "We've reduced our authentication-related support tickets by 80% since implementing this system. The reliability and user experience are outstanding.",
-    author: "Sarah Chen",
-    role: "Head of Product, DataFlow",
+    quote: "A context-aware support bot built on Retrieval-Augmented Generation (RAG). Unlike standard chatbots, the system will securely indexe documentation to instantly resolve complex authentication queries and guide users through recovery flows without human intervention.",
+    author: "Artifical Intelligence",
   },
-  {
-    quote:
-      "The flexibility of this auth solution allowed us to customize the flow exactly to our brand's needs. Our conversion rate has improved dramatically.",
-    author: "Michael Rodriguez",
-    role: "CEO, Startup Ventures",
-  },
+  // {
+  //   quote:
+  //     "The flexibility of this auth solution allowed us to customize the flow exactly to our brand's needs. Our conversion rate has improved dramatically.",
+  //   author: "Michael Rodriguez",
+  //   role: "CEO, Startup Ventures",
+  // },
 ];
 
 const Testimonials = () => {
@@ -90,7 +86,7 @@ const Testimonials = () => {
             className="inline-block"
           >
             <span className="inline-block py-1 px-3 text-xs font-medium tracking-wider text-purple-400 uppercase bg-purple-900/30 rounded-full mb-4">
-              Testimonials
+              Vision
             </span>
           </motion.div>
           <motion.h2
@@ -100,7 +96,7 @@ const Testimonials = () => {
             viewport={{ once: true }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-purple-600"
           >
-            What Our Clients Say
+          Future Roadmap
           </motion.h2>
         </div>
 

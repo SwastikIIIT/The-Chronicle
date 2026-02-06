@@ -1,7 +1,7 @@
 "use client";
-import Features from "@/components/Features";
-import { Hero } from "@/components/hero";
-import Testimonials from "@/components/Testimonials";
+import Features from "@/components/layout/Features";
+import { Hero } from "@/components/layout/Hero";
+import Testimonials from "@/components/layout/Testimonials";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,19 +61,18 @@ const AuthBackend = () => {
         </AlertDialog>
       )}
       <Hero
-        title="Secure Authentication for Modern Apps"
-        subtitle="Experience seamless authentication and authorization with our cutting-edge security system."
+        title="Advanced Access Control & Security Suite"
+        subtitle="Secure your digital assets with end-to-end encrypted verification, and secure recovery flows. Modern security, simplified"
         actions={[
           {
             label: "Get Started",
-            href: "/start",
+            href: "/",
             variant: "primary",
           },
         ]}
       />
       <Features />
       <Testimonials />
-      {/* <Footer/> */}
     </>
   );
 };

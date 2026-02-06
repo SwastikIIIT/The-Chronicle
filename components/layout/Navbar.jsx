@@ -12,14 +12,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { handleSignout } from "@/helper/formcontrols/handleSignout";
+import { handleSignout } from "@/server/providers/handleSignout";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { GlobeLockIcon } from "lucide-react";
 
 const tabs = [
   { id: "", label: "Home", icon: Home },
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "vault", label: "Storage", icon: GlobeLockIcon },
 ];
 
 const Navbar = ({ session }) => {

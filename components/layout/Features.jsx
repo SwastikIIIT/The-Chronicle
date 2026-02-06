@@ -6,36 +6,36 @@ import { cn } from "@/lib/utils";
 const featuresList = [
   {
     icon: <Shield className="text-purple-500 w-6 h-6" />,
-    title: "Enterprise Security",
+    title: "AES-256 Encryption",
     description:
-      "Bank-level protection with advanced encryption and secure data handling.",
-  },
-  {
-    icon: <Key className="text-purple-500 w-6 h-6" />,
-    title: "Passwordless Auth",
-    description: "Modern authentication without the hassle of passwords.",
-  },
-  {
-    icon: <Zap className="text-purple-500 w-6 h-6" />,
-    title: "Lightning Fast",
-    description:
-      "Optimized authentication flows that complete in milliseconds.",
-  },
-  {
-    icon: <Users className="text-purple-500 w-6 h-6" />,
-    title: "User Management",
-    description: "Comprehensive tools to manage users, roles, and permissions.",
+      "Sensitive keys and 2FA secrets are encrypted at rest using the AES-256-CBC algorithm with unique initialization vectors.",
   },
   {
     icon: <Lock className="text-purple-500 w-6 h-6" />,
-    title: "Multi-Factor Auth",
-    description: "Enhanced security with customizable verification methods.",
+    title: "Adaptive Hashing",
+    description: "Passwords and recovery codes are irreversibly secured using Bcrypt with salt rounds optimized for hardware resistance.",
+  },
+  {
+    icon: <Key className="text-purple-500 w-6 h-6" />,
+    title: "TOTP 2FA Integration",
+    description:
+      "Time-based One-Time Passwords compatible with Google Authenticator, enforcing a second layer of defense.",
+  },
+  {
+    icon: <Zap className="text-purple-500 w-6 h-6" />,
+    title: "Secure Recovery Flows",
+    description: "Cryptographically generated emergency backup codes ensure account access is never permanently lost.",
+  },
+  {
+    icon: <Users className="text-purple-500 w-6 h-6" />,
+    title: "Identity Verification",
+    description: "Automated SMTP email challenges with short-lived, hashed tokens to validate user ownership.",
   },
   {
     icon: <Clock className="text-purple-500 w-6 h-6" />,
-    title: "Persistent Sessions",
+    title: "Anti-Spam Rate Limiting",
     description:
-      "Secure, configurable session management for your applications.",
+      "Intelligent throttling on verification endpoints prevents brute-force attacks and abuse.",
   },
 ];
 
@@ -64,7 +64,7 @@ const Features = () => {
   };
 
   return (
-    <section className="w-full bg-black pt-5 pb-24 px-4 sm:px-6 relative overflow-hidden">
+    <section className="w-full bg-black pb-24 px-4 sm:px-6 relative overflow-hidden">
       {/* Enhanced background gradient with base layer */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black"></div>
 
@@ -93,7 +93,7 @@ const Features = () => {
             viewport={{ once: true }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-purple-600"
           >
-            Powerful Authentication
+            Core Security Architecture
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -102,8 +102,7 @@ const Features = () => {
             viewport={{ once: true }}
             className="text-gray-300 text-xl max-w-3xl mx-auto"
           >
-            Everything you need to secure your application with a modern, robust
-            authentication system.
+            A zero-trust security system built with military-grade AES encryption, adaptive hashing, and multi-layered identity verification.
           </motion.p>
         </div>
 

@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { handleAuth } from "@/helper/formcontrols/handleAuth";
+import { handleAuth } from "@/server/providers/handleAuth";
 import { toast } from "sonner";
-import { handleSignup } from "@/helper/formcontrols/handleSignup";
+import { handleSignup } from "@/server/api";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EyeIcon } from "lucide-react";
@@ -13,9 +13,9 @@ import { EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const SignupForm = () => {
-  const [show,setShow]=useState(false);
-  const router=useRouter();
-  
+  const [show, setShow] = useState(false);
+  const router = useRouter();
+
   const signup = async (formData) => {
     const toastID = toast.loading("Signing up...");
     try {
@@ -26,7 +26,7 @@ const SignupForm = () => {
           id: toastID,
           description: "Your account has been successfully created. Welcome!",
         });
-         router.push("/login");
+      router.push("/login");
     } catch (err) {
       if (err.message !== "NEXT_REDIRECT")
         toast.error(err.message, { id: toastID });
@@ -59,30 +59,36 @@ const SignupForm = () => {
 
         <div className="grid gap-6">
           <div className="grid gap-3">
-            <Label htmlFor="username" className="text-gray-300 flex items-center gap-2">
+            <Label
+              htmlFor="username"
+              className="text-gray-300 flex items-center gap-2"
+            >
               <User size={16} className="text-purple-400" />
               Username
             </Label>
             <div className="relative">
-              <Input 
-                name="username" 
-                type="text" 
-                placeholder="Vasu Dixit" 
+              <Input
+                name="username"
+                type="text"
+                placeholder="Swastik Sharma"
                 className="pl-3 pr-3 py-2 bg-black/40 border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder:text-gray-500"
               />
             </div>
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="email" className="text-gray-300 flex items-center gap-2">
+            <Label
+              htmlFor="email"
+              className="text-gray-300 flex items-center gap-2"
+            >
               <Mail size={16} className="text-purple-400" />
               Email
             </Label>
             <div className="relative">
-              <Input 
-                name="email" 
-                type="email" 
-                placeholder="vasu@example.com" 
+              <Input
+                name="email"
+                type="email"
+                placeholder="vasu@example.com"
                 className="pl-3 pr-3 py-2 bg-black/40 border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder:text-gray-500"
               />
             </div>
@@ -90,7 +96,10 @@ const SignupForm = () => {
 
           <div className="grid gap-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-gray-300 flex items-center gap-2">
+              <Label
+                htmlFor="password"
+                className="text-gray-300 flex items-center gap-2"
+              >
                 <Lock size={16} className="text-purple-400" />
                 Password
               </Label>
@@ -104,14 +113,14 @@ const SignupForm = () => {
             <div className="relative">
               <Input
                 name="password"
-                type={show ? "text" : "password" }  
+                type={show ? "text" : "password"}
                 placeholder="*********"
                 required
                 className="pl-3 pr-3 py-2 bg-black/40 border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder:text-gray-500"
               />
-             <button
+              <button
                 type="button"
-                onClick={() => setShow(prev => !prev)}
+                onClick={() => setShow((prev) => !prev)}
                 className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
               >
                 {show ? <EyeOff size={20} /> : <EyeIcon size={20} />}
@@ -119,17 +128,22 @@ const SignupForm = () => {
             </div>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full mt-2 cursor-pointer bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-medium py-2 flex items-center justify-center gap-2 group transition-all duration-300"
           >
             <span>Create Account</span>
-            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+            <ArrowRight
+              size={16}
+              className="group-hover:translate-x-1 transition-transform duration-300"
+            />
           </Button>
 
           <div className="relative flex items-center py-2">
             <div className="flex-grow border-t border-purple-900/40"></div>
-            <span className="flex-shrink mx-3 text-xs text-gray-400">OR CONTINUE WITH</span>
+            <span className="flex-shrink mx-3 text-xs text-gray-400">
+              OR CONTINUE WITH
+            </span>
             <div className="flex-grow border-t border-purple-900/40"></div>
           </div>
         </div>
@@ -140,23 +154,26 @@ const SignupForm = () => {
           variant="outline"
           className="w-full cursor-pointer border-purple-900/60 hover:border-purple-500 text-black hover:bg-purple-900/20 hover:text-white transition-all duration-300 flex items-center justify-center gap-3 py-2"
         >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              className="h-5 w-5 hover:text-white"
-            >
-              <path
-                d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                fill="currentColor" // Use currentColor to inherit the text color
-              />
-            </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            className="h-5 w-5 hover:text-white"
+          >
+            <path
+              d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+              fill="currentColor" // Use currentColor to inherit the text color
+            />
+          </svg>
           <span>Login with Google</span>
         </Button>
       </form>
 
       <div className="text-center text-gray-400 text-sm mt-2">
         Already have an account?{" "}
-        <Link href="/login" className="text-purple-400 cursor-pointer hover:text-purple-300 transition-colors font-medium">
+        <Link
+          href="/login"
+          className="text-purple-400 cursor-pointer hover:text-purple-300 transition-colors font-medium"
+        >
           Login
         </Link>
       </div>
