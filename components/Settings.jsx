@@ -107,8 +107,8 @@ const Settings = ({session}) => {
         transition={{ duration: 0.5 }}
         className="container mx-auto pt-12 px-4 relative z-10"
       >
-        <h1 className="text-3xl md:text-4xl text-white font-bold mb-8 border-b border-purple-900/40 pb-4">
-          Account Settings
+        <h1 className="text-4xl md:text-5xl text-white font-bold mb-8 border-b border-purple-900/40 pb-4">
+          Account <span className="text-purple-500">Settings</span>
         </h1>
 
         {/* Profile Settings Card */}
