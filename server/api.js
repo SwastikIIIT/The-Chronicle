@@ -1,6 +1,12 @@
 'use server'
 import { cookies } from "next/headers";
 
+export async function getCookies(){
+     const Cookies = await cookies();
+     const cookie = Cookies.get("backend_token")?.value;
+     return cookie;
+} 
+
 export const handleSignup=async(formData)=>{
     try
     {
@@ -31,8 +37,7 @@ export const handleSignup=async(formData)=>{
 
 export const fetchUserInfo = async () => {
   try {
-    const Cookies = await cookies();
-    const cookie = Cookies.get("backend_token")?.value;
+    const cookie=await getCookies();
     const response = await fetch(`${process.env.BACKEND_URL}/api/auth/user`,{
         method: "GET",
         headers: {
@@ -60,8 +65,7 @@ export const fetchUserInfo = async () => {
 
 export const uploadImage = async (formData) => {
   try{
-     const Cookies = await cookies();
-     const cookie = Cookies.get("backend_token")?.value;
+    const cookie=await getCookies();
      
      const response = await fetch(`${process.env.BACKEND_URL}/api/auth/user/avatar/upload`, {
             method: "POST",
@@ -85,8 +89,7 @@ export const uploadImage = async (formData) => {
 
 export const saveImage = async(key)=>{
    try{
-      const Cookies = await cookies();
-      const cookie = Cookies.get("backend_token")?.value;
+      const cookie=await getCookies();
       const response = await fetch(`${process.env.BACKEND_URL}/api/auth/user/avatar/save`, {
             method: "POST",
             headers: { 
@@ -109,8 +112,7 @@ export const saveImage = async(key)=>{
 export const startSetup = async() => {
    try
    {
-        const Cookies = await cookies();
-        const cookie = Cookies.get("backend_token")?.value;
+        const cookie=await getCookies();
         const data=await fetch(`${process.env.BACKEND_URL}/api/auth/user/2fa/setup`,{
           method:"GET",
           headers:{
@@ -131,8 +133,7 @@ export const startSetup = async() => {
 
 export const handleVerify2FA = async(formData) => {
     const code = formData.get("token");
-    const Cookies = await cookies();
-    const cookie = Cookies.get("backend_token")?.value;
+    const cookie=await getCookies(); 
 
     if(!code || code.length<6)
         throw new Error("Please enter a valid 6-digit code");
@@ -159,8 +160,7 @@ export const handleVerify2FA = async(formData) => {
 }
 
 export const disable2FA = async() => {
-    const Cookies = await cookies();
-    const cookie = Cookies.get("backend_token")?.value;
+    const cookie=await getCookies();
     try
     {
            const data=await fetch(`${process.env.BACKEND_URL}/api/auth/user/2fa/disable`,{
@@ -183,8 +183,7 @@ export const disable2FA = async() => {
 }
 
 export const sendEmail = async(email) =>{
-    const Cookies = await cookies();
-    const cookie = Cookies.get("backend_token")?.value;
+    const cookie=await getCookies();
     try{
           const data = await fetch(`${process.env.BACKEND_URL}/api/auth/user/email/send`,{
             method:"POST",
@@ -209,8 +208,7 @@ export const sendEmail = async(email) =>{
 }
 
 export const verifyCode = async(formData,email) => {
-  const Cookies = await cookies();
-  const cookie = Cookies.get("backend_token")?.value;
+  const cookie=await getCookies();
   const code = formData.get('code');
   console.log("Email and code:",email," : ",code);
   try{
@@ -236,8 +234,7 @@ export const verifyCode = async(formData,email) => {
 
 export const passwordLink = async(formData) => {
     const email = formData.get("email");
-    const Cookies = await cookies();
-    const cookie = Cookies.get("backend_token")?.value;
+    const cookie=await getCookies();
     try
     {
         const data = await fetch(`${process.env.BACKEND_URL}/api/auth/password/link`,{
@@ -265,8 +262,7 @@ export const handleResetPassword = async(formData) => {
     const confPass = formData.get("confirmpassword");
     const token = formData.get("token");
     const userId = formData.get("id");
-    const Cookies = await cookies();
-    const cookie = Cookies.get("backend_token")?.value;
+    const cookie=await getCookies();
 
     if(newPass!==confPass) throw new Error("Passwords don't match");
 

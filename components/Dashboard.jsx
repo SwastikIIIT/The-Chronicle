@@ -28,12 +28,12 @@ import {
   formatDate,
   formatDateTime,
   timeAgo,
-} from "@/utils/formatter";
+} from "@/lib/utils";
 import { Laptop2 } from "lucide-react";
 import SecurityHealth from "./CircularProgress";
 import LoginActivityGraph from "./Graph";
 
-const Dashboard = ({session}) => {
+const Dashboard = ({ session }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,10 +66,10 @@ const Dashboard = ({session}) => {
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour >= 12 && hour <= 18)
-      return `Good Afternoon, ${userInfo?.username}`;
-    else if (hour > 18 && hour <= 24)
-      return `Good Evening, ${userInfo?.username}`;
-    else if (hour > 24) return `Good Morning, ${userInfo?.username}`;
+      return [`Good Afternoon`, `${userInfo?.username}`];
+    if (hour > 18 && hour <= 24)
+      return [`Good Evening`, `${userInfo?.username}`];
+    if (hour > 0) return [`Good Morning`, `${userInfo?.username}`];
   };
 
   const calculateSecurityScore = (userInfo) => {
@@ -141,7 +141,8 @@ const Dashboard = ({session}) => {
         className="container mx-auto pt-12 px-4 relative z-10"
       >
         <h1 className="text-4xl md:text-5xl text-white font-bold mb-8 border-b border-purple-900/40 pb-4">
-            {greeting().split(',')[0]},<span className="text-purple-500">{greeting().split(',')[1]}</span>
+          {greeting()[0]},{" "}
+          <span className="text-purple-500">{greeting()[1]}</span>
         </h1>
 
         {/* UserCard */}

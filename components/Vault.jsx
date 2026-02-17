@@ -1,22 +1,185 @@
 "use client";
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Upload, 
-  FileText, 
-  ShieldCheck, 
-  HardDrive, 
-  Plus, 
+import React, { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Upload,
+  FileText,
+  ShieldCheck,
+  HardDrive,
+  Plus,
   Search,
   FileIcon,
   ExternalLink,
-  Trash2
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+  Trash2,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { X } from "lucide-react";
+import { calcSize, cn, timeAgo } from "@/lib/utils";
+import { Activity } from "lucide-react";
+import Table from "./web3/Table";
+import blockchain from "@/classes/blockchain";
+import { deleteFileData, uploadedFileInfo, uploadToIPFS } from "@/server/web3.api";
+import File from "./web3/File";
+
+const Info = [
+  {
+    label: "Balance",
+    formatter: (info) => `${info.balance} ETH`,
+    icon: <ShieldCheck className="text-green-500" size={16} />,
+  },
+  {
+    label: "Network",
+    formatter: (info) => info.networkName,
+    icon: <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />,
+  },
+  {
+    label: "Chain ID",
+    formatter: (info) => info.chainId,
+    icon: <span className="text-[10px] font-bold text-purple-400">#</span>,
+  },
+  {
+    label: "Status",
+    formatter: () => "Connected to Ganache",
+    icon: <ShieldCheck className="text-blue-500" size={16} />,
+  },
+];
 
 const Vault = () => {
-  const [files, setFiles] = useState([]);
+  const [file, setFile] = useState(null);
+  const [web3Info, setWeb3Info] = useState({});
+  const [fileMetadata, setFileMetaData] = useState([]);
+  const [history, setHistory] = useState([]);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    const setupWeb3 = async () => {
+      setIsLoading(true);
+      try {
+        const result = await blockchain.connectToWeb3();
+        const fileMetadata=await uploadedFileInfo();
+        if (result.success) {
+          setWeb3Info(result);
+          setHistory(result.history);
+          setFileMetaData(fileMetadata);
+          toast.success("Wallet Linked", {
+            description: `Connected to ${result.account.slice(0, 7)}...${result.account.slice(-5)}`,
+          });
+        }
+      } catch (err) {
+        console.log("Error while setting up web3:", err);
+        toast.error("Web3 Error", { description: err.message });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    setupWeb3();
+
+    window.ethereum.on("accountsChanged", (accounts) => {
+      if (accounts.length > 0) {
+        setupWeb3();
+        toast.info("Account Switched");
+      } else {
+        setWeb3Info({});
+        toast.error("Wallet Disconnected");
+      }
+    });
+
+    window.ethereum.on("chainChanged", () => {
+      window.location.reload();
+    });
+  }, []);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    console.log("Uploaded File:", file);
+    if (file) setFile(file);
+    e.target.files=null;
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer.files[0];
+    console.log("Dropped File:", droppedFile);
+    if (droppedFile) setFile(droppedFile);
+    e.dataTransfer.files=null;
+  };
+
+  const handleSubmit = async () => {
+    if (!file || isUploading) return;
+
+    setIsUploading(true);
+    try {
+      // const accounts = await window.ethereum.request({
+      //   method: "eth_accounts",
+      // });
+      // console.log("Account:", accounts[0]);
+      // const publicKey = await window.ethereum.request({
+      //   method: "eth_getEncryptionPublicKey",
+      //   params: [accounts[0]],
+      // });
+      const result = await uploadToIPFS("dfaf", file);
+      toast.success("Success", { description: result?.message });
+      setFile(null);
+      setFileMetaData((prev)=>[...prev,result.metaInfo]);
+      setIsUploading(false);
+    } catch (error) {
+      console.log("Error in handleSubmit:", error);
+      toast.error("Upload failed", { description: error?.message || "Upload to IPFS failed",});
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDelete=async(metaData)=>{
+      setIsLoading(true);
+      try{
+          const result=await deleteFileData(metaData);
+          setFileMetaData((prev)=>{
+            const filtered= prev.filter((item)=>!(
+              item.name===metaData.name &&
+              item.size===metaData.size &&
+              item.type===metaData.type &&
+              item.uploadedAt===metaData.uploadedAt 
+            ))
+            return filtered;
+          })
+          if(result.success) toast.success("Success",{description:result.message})
+      }
+      catch(err)
+      {
+          console.log("Delete me error:",err);
+          toast.error("Error",{description:err.message || "Delete me koi error hai"})
+      }
+      finally{
+        setIsLoading(false);
+      }
+  }
+
+  if (isLoading || isUploading) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center z-50">
+        <motion.div
+          className="h-12 w-12 rounded-full border-4 border-purple-900/30 border-t-purple-500"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        <p className="mt-4 text-purple-500/80 font-mono text-sm animate-pulse">
+          {isLoading && "Loading..."} {isUploading && "Uploading..."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black pb-16">
@@ -24,25 +187,87 @@ const Vault = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-0 h-36 w-96 rounded-full bg-purple-600/40 opacity-70 blur-3xl" />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="container mx-auto pt-12 px-4 relative z-10"
       >
         {/* Header Section */}
-        <div className='flex flex-col md:flex-row md:items-center justify-between mb-10 border-b border-purple-900/30 pb-6 gap-4'>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 border-b border-purple-900/30 pb-6 gap-4">
           <div>
             <h1 className="text-4xl md:text-5xl text-white font-bold">
-                Decentralized <span className="text-purple-500">Vault</span>
+              Decentralized <span className="text-purple-500">Vault</span>
             </h1>
-            <p className="text-gray-400 mt-2">Secure, encrypted, and permanent file storage.</p>
+            <p className="text-gray-400 mt-2">
+              Secure, encrypted, and permanent file storage.
+            </p>
           </div>
-          <div className="px-4 py-2 bg-purple-950/30 text-purple-400 rounded-lg border border-purple-500/20 flex items-center gap-3 w-fit">
+          <div className="flex flex-col gap-2">
+            <div className="w-full px-4 py-2 bg-purple-950/30 text-purple-400 rounded-lg border border-purple-500/20 flex items-center gap-3 w-fit">
+              <div
+                className={cn(
+                  "h-2 w-2 rounded-full animate-pulse",
+                  web3Info?.account ? "bg-green-500" : "bg-red-500",
+                )}
+              />
+              <span className="font-mono text-xs">
+                {" "}
+                {web3Info?.account ? web3Info?.account : "Not Connected"}
+              </span>
+            </div>
+            <div className="self-end  px-4 py-2 bg-purple-950/30 text-purple-400 rounded-lg border border-purple-500/20 flex items-center gap-3 w-fit">
               <HardDrive size={18} className="animate-pulse" />
-              <span className="font-mono text-sm">1.2 GB / 10 GB Used</span>
+              <span className="font-mono text-sm">{calcSize(fileMetadata)}</span>
+            </div>
           </div>
         </div>
+
+        {/* Account Information */}
+        {web3Info?.account && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          >
+            {Info.map((stat, i) => (
+              <div
+                key={i}
+                className="flex flex-col gap-2 bg-zinc-900/40 border border-purple-900/20 p-3 rounded-xl backdrop-blur-md"
+              >
+                <div className="flex items-center gap-2 text-gray-500 text-xs">
+                  {stat.icon}
+                  <span>{stat.label}</span>
+                </div>
+                <div className="text-white font-mono text-sm font-semibold pl-1">
+                  {stat.formatter(web3Info)}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Transaction History Section - To be removed */}
+        {/* <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="my-8"
+          >
+            <Card className="bg-zinc-950/50 border-purple-900/40 backdrop-blur-sm shadow-xl">
+              <CardHeader className="border-b border-purple-900/30">
+               <div className='flex gap-2 items-center mb-3'>
+                  <Activity size={22} className="text-purple-500" />
+                  <div className='flex flex-col'>
+                    <CardTitle className="text-white mb-1">Recent Activity</CardTitle>
+                    <CardDescription className="text-gray-500">Overview of your transactions</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+               <Table history={history}/>
+              </CardContent>
+            </Card>
+          </motion.div> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column: Upload Section */}
@@ -52,30 +277,95 @@ const Vault = () => {
             transition={{ duration: 0.5 }}
           >
             <Card className="bg-zinc-950/50 border-purple-900/40 backdrop-blur-sm shadow-xl h-full">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Upload size={20} className="text-purple-500" />
-                    Store New Asset
-                  </CardTitle>
-                  <CardDescription>Files are fragmented and encrypted via AES-256</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <label className="group relative flex flex-col items-center justify-center w-full h-72 border-2 border-dashed border-zinc-800 rounded-2xl cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/5 transition-all duration-300">
-                    <div className="flex flex-col items-center justify-center p-6 text-center">
-                      <div className="p-4 bg-purple-500/10 rounded-full group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
-                        <Plus size={32} className="text-purple-500" />
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <Upload size={22} className="text-purple-500" />
+                  <div>
+                    <CardTitle className="text-white mb-1">
+                      Store New Asset
+                    </CardTitle>
+                    <CardDescription className="text-gray-500">
+                      Files are fragmented and encrypted via AES-256
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!file ? (
+                  <>
+                    <label
+                      onDrop={handleDrop}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      className={cn(
+                        "group relative flex flex-col items-center justify-center w-full h-72 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200 ease-out",
+                        isDragging
+                          ? "border-purple-500 bg-purple-500/10 scale-[1.03] shadow-[0_0_40px_rgba(168,85,247,0.35)]"
+                          : "border-zinc-800 bg-transparent scale-100 shadow-none",
+                        "hover:border-purple-500/50 hover:bg-purple-500/5",
+                      )}
+                    >
+                      <div className="flex flex-col items-center justify-center p-6 text-center">
+                        <div className="p-4 bg-purple-500/10 rounded-full group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
+                          <Plus size={32} className="text-purple-500" />
+                        </div>
+                        <p className="mt-4 text-sm text-zinc-300">
+                          <span className="font-semibold text-purple-400">
+                            Click to upload
+                          </span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="text-xs text-zinc-500 mt-2">
+                          Max file size: 10MB per transaction
+                        </p>
                       </div>
-                      <p className="mt-4 text-sm text-zinc-300">
-                        <span className="font-semibold text-purple-400">Click to upload</span> or drag and drop
+                      <input
+                        type="file"
+                        accept=".pdf,.xlsx,.csv"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="relative w-full h-72 border border-purple-500/30 rounded-2xl bg-purple-950/20 flex flex-col justify-center items-center relative overflow-hidden"
+                    >
+                      <button
+                        onClick={() => {
+                          setFile(null);
+                          setIsUploading(false);
+                        }}
+                        className="cursor-pointer absolute top-3 right-3 p-2 rounded-full font-bold hover:bg-purple-500/20 text-white  transition"
+                      >
+                        <X size={16} />
+                      </button>
+                      <div className="p-4 bg-purple-500/10 rounded-xl mb-4">
+                        <FileText size={36} className="text-purple-400" />
+                      </div>
+
+                      <p className="text-sm text-white font-medium">
+                        {file.name}
                       </p>
-                      <p className="text-xs text-zinc-500 mt-2">Max file size: 100MB per transaction</p>
-                    </div>
-                    <input type="file" className="hidden" />
-                  </label>
-                  <button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-purple-600/20 active:scale-[0.98]">
-                    Upload to Blockchain
-                  </button>
-                </CardContent>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </motion.div>
+                  </>
+                )}
+                <button
+                  className="cursor-pointer w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-purple-600/20 active:scale-[0.98]"
+                  onClick={handleSubmit}
+                >
+                  Upload to Blockchain
+                </button>
+              </CardContent>
             </Card>
           </motion.div>
 
@@ -84,57 +374,9 @@ const Vault = () => {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
-           >
-            <Card className="bg-black border border-purple-900/40 shadow-lg hover:shadow-purple-900/20 transition-all h-full">
-              <CardHeader className="border-b border-purple-900/30">
-                <div className="flex items-center gap-4 mb-3">
-                  <ShieldCheck size={22} className="text-purple-500" />
-                  <div>
-                    <CardTitle className="text-white mb-1">Your Documents</CardTitle>
-                    <CardDescription className="text-gray-400 ">Stored securely via IPFS & Smart Contracts</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-50" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Search in vault..." 
-                    className="bg-white/5 border border-white/25 text-white rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-purple-500/50"
-                  />
-                </div>
-                <div className="space-y-4">
-                  {/* Sample File Row */}
-                  {[1, 2, 3].map((item) => (
-                    <div 
-                      key={item}
-                      className="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-purple-500/10 rounded-lg text-purple-500">
-                          <FileIcon size={24} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-white">identity_proof_v{item}.pdf</p>
-                          <p className="text-xs text-gray-500">Uploaded 2 days ago • 1.4 MB</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button title="View on IPFS" className="p-2 hover:bg-white/10 rounded-md text-gray-400 hover:text-white">
-                          <ExternalLink size={18} />
-                        </button>
-                        <button title="Delete" className="p-2 hover:bg-red-500/10 rounded-md text-gray-400 hover:text-red-500">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          >
+            <File fileMetadata={fileMetadata} handleDelete={handleDelete}/>
           </motion.div>
-
         </div>
       </motion.div>
     </div>

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "The Chronicle",
-  description: "Authentication and Authorisation system deployed over AWS .Provides complete user's login history with time stampings and user agent profile. ",
+  description: "Security system.Provides complete user's login history with time stampings and user agent profile. ",
   icons: {
     shortcut:"/favicon.svg"
   },
