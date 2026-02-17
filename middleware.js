@@ -1,15 +1,32 @@
-import { SignJWT } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 import { decode } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
 export async function middleware(req) {
-  const frontendCookie = req.cookies.get("authjs.session-token");
+  const frontendCookie = req.cookies.get("authjs.session-token") || req.cookies.get("__Secure-authjs.session-token");;
   const backendCookie = req.cookies.get("backend_token");
 
   if (!frontendCookie) {
     const loginURL = new URL("/home", req.url);
     loginURL.searchParams.set("auth", "required");
     return NextResponse.redirect(loginURL);
+  }
+
+  if(backendCookie){
+    //Check expiration
+    try{
+      const secret = new TextEncoder().encode(process.env.BACKEND_SECRET);
+      await jwtVerify(backendCookie.value,secret);
+    }
+    catch(err){
+      console.log("Backend token expired or invalid. Clearing all cookies.");
+      const loginURL = new URL("/login", req.url);
+      const response = NextResponse.redirect(loginURL);
+      response.cookies.delete("backend_token");
+      response.cookies.delete("authjs.session-token");
+      response.cookies.delete("__Secure-authjs.session-token");
+      return response;
+    }
   }
 
   if(frontendCookie && !backendCookie){
