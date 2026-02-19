@@ -24,9 +24,10 @@ import { X } from "lucide-react";
 import { calcSize, cn, timeAgo } from "@/lib/utils";
 import { Activity } from "lucide-react";
 import Table from "./web3/Table";
-import blockchain from "@/classes/blockchain";
+import blockchain from "@/services/blockchain";
 import { deleteFileData, uploadedFileInfo, uploadToIPFS } from "@/server/web3.api";
-import File from "./web3/File";
+import FileLayout from "./web3/FileLayout";
+
 
 const Info = [
   {
@@ -46,7 +47,7 @@ const Info = [
   },
   {
     label: "Status",
-    formatter: () => "Connected to Ganache",
+    formatter: (info) => info.networkName==='Localhost/Private'?'Private Blockchain':'Public Blockchain',
     icon: <ShieldCheck className="text-blue-500" size={16} />,
   },
 ];
@@ -247,8 +248,8 @@ const Vault = () => {
           </motion.div>
         )}
 
-        {/* Transaction History Section - To be removed */}
-        {/* <motion.div 
+        {/* Transaction History Section - BlockExplorer jaisa */}
+        <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="my-8"
@@ -264,10 +265,10 @@ const Vault = () => {
                 </div>
               </CardHeader>
               <CardContent>
-               <Table history={history}/>
+               <Table history={history} chainId={web3Info.chainId}/>
               </CardContent>
             </Card>
-          </motion.div> */}
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column: Upload Section */}
@@ -375,7 +376,7 @@ const Vault = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <File fileMetadata={fileMetadata} handleDelete={handleDelete}/>
+            <FileLayout fileMetadata={fileMetadata} handleDelete={handleDelete}/>
           </motion.div>
         </div>
       </motion.div>

@@ -8,7 +8,7 @@ import { calcSize, timeAgo } from '@/lib/utils'
 import { ShieldCheck } from 'lucide-react'
 
 
-const File = ({fileMetadata,handleDelete}) => {
+const FileLayout = ({fileMetadata,handleDelete}) => {
  
   return (
     <Card className="bg-black border border-purple-900/40 shadow-lg hover:shadow-purple-900/20 transition-all h-full">
@@ -84,4 +84,4 @@ const File = ({fileMetadata,handleDelete}) => {
   )
 }
 
-export default File
+export default FileLayout
