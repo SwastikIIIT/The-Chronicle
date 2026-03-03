@@ -2,6 +2,7 @@
 import { decryptAESKeyWithLit, encryptAesKeywithLit } from "@/helper/Lit";
 import { getCookies } from "./api";
 import Encryption from "@/services/encryption";
+import { auth } from "@/auth";
 
  /**
  * Flow:
@@ -22,9 +23,12 @@ import Encryption from "@/services/encryption";
  *     name:string,
  *     size:string,
  *     fileDBId:string
+ *     authTag:string,
+ *     iv:string
  *   };
  *   cid:string,
- *   key:string
+ *   cipher:string
+ *   digest:string
  * }>}
  */
 export const uploadToIPFS=async (address,chainId,file) => {
@@ -35,11 +39,13 @@ export const uploadToIPFS=async (address,chainId,file) => {
     console.log("Key:",key);
     // 2. File Encryption (Symmetric)
     const fileBuffer=Buffer.from(await file.arrayBuffer());
-    const { encryptedData }=Encryption.encryptWithAES(fileBuffer, key);
+    const { encryptedData,iv,authTag }=Encryption.encryptWithAES(fileBuffer, key);
     const encryptedFile=new File([encryptedData], file.name, {type: "application/octet-stream"});
 
     const formData = new FormData();
     formData.append("doc", encryptedFile); 
+    formData.append("iv", iv); 
+    formData.append("authTag", authTag); 
 
     // 3. Upload encryptedFile to IPFS
     const result = await fetch(`${process.env.BACKEND_URL}/api/web3/ipfs`, {
@@ -61,7 +67,8 @@ export const uploadToIPFS=async (address,chainId,file) => {
       message: data?.message,
       metaInfo:data.uploadedFile,
       cid,
-      key: encryptedAES?.litResponse?.ciphertext
+      cipher: encryptedAES?.litResponse?.ciphertext,
+      digest: encryptedAES?.litResponse?.dataToEncryptHash,
     };
   } catch (err) {
     console.error("Error while uploading file:", err);
@@ -71,7 +78,14 @@ export const uploadToIPFS=async (address,chainId,file) => {
 
 /**
  * Store file metadata information in DB
- * @returns {Promise<File[]>} Array of fileData - File Metadata
+ * @returns {Promise<{
+ *          type:string,
+ *          name:string,
+ *          size:string,
+ *          fileDBId:string
+ *          authTag:string
+ *          iv:string
+ *         }[]>} - Array of fileData - File Metadata
  */
 export const uploadedFileInfo = async()=>{
   try{
@@ -82,7 +96,7 @@ export const uploadedFileInfo = async()=>{
       if(result.status===204) return [];
       const data=await result.json();
     
-      return data.files;
+      return data.metaDatas;
   }
   catch(err)
   {
@@ -124,5 +138,36 @@ export const deleteFileData=async(metaData)=>{
   {
     console.log(err);
      throw new Error(err?.message || "Failed to delete file info");
+  }
+}
+
+ /**
+ * Get encrypted file from IPFS
+ * @param {string} cid  - Content Identifier 
+ * @returns {Promise<Buffer<ArrayBufferLike>>} - Encrypted file buffer
+ */
+export const getFileIPFS=async(cid)=>{
+  try{
+      const cookie=await getCookies();
+      const result=await fetch(`${process.env.BACKEND_URL}/api/web3/get-file`, {
+        method:'POST',
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `backend_token=${cookie}`
+        },
+        body:JSON.stringify({ cid:cid })
+      });
+
+      if(!result.ok){
+        const errorText=await result.text();
+        throw new Error(errorText);
+      }
+      const arrayBuffer=await result.arrayBuffer();
+  
+      return arrayBuffer;
+  }
+  catch(err){
+      console.log(err);
+      throw new Error(err?.message || "Failed to get file from IPFS.");
   }
 }

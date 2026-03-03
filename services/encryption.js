@@ -30,8 +30,8 @@ class Encryption {
 
    /**
    * Symmetric encryption using AES-256-GCM
-   * @param {Buffer} buffer -The file data
-   * @param {Buffer} aesKey  - key
+   * @param {Buffer} buffer - The file data
+   * @param {Buffer} aesKey - key generated from generateAES function
    * */
   static encryptWithAES(buffer, aesKey) {
     try {
@@ -53,7 +53,7 @@ class Encryption {
       const authTag = cipherText.getAuthTag();
 
       return {
-        v: iv.toString("hex"),
+        iv: iv.toString("hex"),
         encryptedData: encrypted,
         authTag: authTag.toString("hex"),
       };
@@ -65,28 +65,30 @@ class Encryption {
 
    /**
    * Symmetric decryption using AES-256-GCM
-   * @param {string} encryptedDataHex - The encrypted data (Hex)
+   * @param {Buffer|ArrayBuffer} encryptedBuffer - The encrypted data buffer
    * @param {string} ivHex - The IV (Hex)
    * @param {string} authTagHex - The Auth Tag (Hex)
-   * @param {Buffer} aesKey - The AES Key
+   * @param {string} aesKeyHex - The AES Key (Hex)
    * */
-  static async decryptWithAES(encryptedDataHex, ivHex, authTagHex, aesKey) {
+  static async decryptWithAES(encryptedBuffer, ivHex, authTagHex, aesKeyHex) {
     try {
-      //1. Get encrypted buffer,iv and authTag
-      const encryptedData = Buffer.from(encryptedDataHex, "hex");
+      //1. Get key buffer ,iv buffer,and authTag buffer
+      const key = Buffer.from(aesKeyHex, "hex");
       const iv = Buffer.from(ivHex, "hex");
       const authTag = Buffer.from(authTagHex, "hex");
+
+      const payloadBuffer = Buffer.isBuffer(encryptedBuffer)?encryptedBuffer:Buffer.from(encryptedBuffer);
       //2. Create cipher
       const decipher = crypto.createDecipheriv(
         Encryption.CONFIG.algorithm,
-        aesKey,
-        Encryption.CONFIG.iv_length,
+        key,
+        iv,
         { authTagLength: Encryption.CONFIG.auth_tag_length },
       );
       decipher.setAuthTag(authTag);
       //3. Decrypt data
       const decrypted = Buffer.concat([
-        decipher.update(encryptedData),
+        decipher.update(payloadBuffer),
         decipher.final(),
       ]);
 
@@ -99,11 +101,12 @@ class Encryption {
 
    /**
    * Decrypts the AES Key using LIT.
-   * @param {string} ciphertext - The encrypted string
-   * @param {string} litHash - The lit hash
+   * @param {string} cipher - The encrypted string
+   * @param {string} digest - dataToEncrypt Hash string
+   * @param {string} chainId - The lit hash
    * @param {string} userAddress - The user's account address
    */
-   static async decryptAESKeyWithLit(litResponse,chainId,userAddress) {
+   static async decryptAESKeyWithLit(cipher,digest,chainId,userAddress) {
     try {
       const litChain=chainMap[chainId.toString()];
       if (!litChain) throw new Error(`Unsupported chain ID for Lit Protocol:${chainId}`);
@@ -145,7 +148,8 @@ class Encryption {
       });
 
       const decryptedResponse = await client.decrypt({
-        data:litResponse,
+        ciphertext:cipher,
+        dataToEncryptHash:digest,
         unifiedAccessControlConditions: accessControlConditions,
         authContext: authContext,
         chain: litChain,
@@ -155,7 +159,7 @@ class Encryption {
       const decoder = new TextDecoder('utf-8');
       const text=decoder.decode(decryptedResponse.decryptedData);
       console.log("Decrypted Text:",text);
-      return decryptedResponse;
+      return text;
     } catch (err) {
       console.log("Error:", err);
       throw new Error(err?.message || "Failed to store key securely via LIT ");

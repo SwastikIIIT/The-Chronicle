@@ -125,11 +125,10 @@ const Vault = () => {
     try {
       setStep('UPLOAD_BLOCKCHAIN');
       const result = await uploadToIPFS(web3Info.account,web3Info.chainId,file);
-      await blockchain.saveToBlockchain(result.cid,result.key,result.metaInfo.fileDBId);
+      console.log("Result from IPFS upload:", result);
+      await blockchain.saveToBlockchain(result.cid,result.cipher,result.digest,result.metaInfo.fileDBId);
       
-      // Decrypytion for testing purpose now here
-      // const decryptedAES=await Encryption.decryptAESKeyWithLit(result.encryptedAES.litResponse,web3Info.chainId,web3Info.account);
-      // console.log("Decryption AES:",decryptedAES);
+
       toast.success("Success", { description: result?.message });
       setFile(null);
       setFileMetaData((prev)=>[...prev,result.metaInfo]);
@@ -376,7 +375,11 @@ const Vault = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <FileLayout fileMetadata={fileMetadata} handleDelete={handleDelete}
+            <FileLayout 
+                fileMetadata={fileMetadata} 
+                handleDelete={handleDelete}
+                chainId={web3Info.chainId}
+                account={web3Info.account}
             />
           </motion.div>
         </div>

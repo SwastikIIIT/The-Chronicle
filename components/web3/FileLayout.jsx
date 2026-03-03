@@ -7,9 +7,11 @@ import { Trash2 } from 'lucide-react'
 import { calcSize, timeAgo } from '@/lib/utils'
 import { ShieldCheck } from 'lucide-react'
 import blockchain from '@/services/blockchain'
+import { getFileIPFS } from '@/server/web3.api'
+import Encryption from '@/services/encryption'
 
 
-const FileLayout = ({fileMetadata,handleDelete}) => {
+const FileLayout = ({fileMetadata,handleDelete,chainId,account}) => {
   const [filtered,setFiltered]=useState(fileMetadata);
 
   const handleSearch=(e)=>{
@@ -26,19 +28,21 @@ const FileLayout = ({fileMetadata,handleDelete}) => {
 
   const handleViewFile=async(metaData)=>{
      try {
-        console.log("Viewing file...",metaData._id);
-
-        const blockchainData=await blockchain.getFileFromBlockchain(metaData._id);
-        const files=await blockchain.getAllFilesFromBlockchain();
-        console.log('File:',blockchainData);
-        console.log('File:',files);
+        console.log("Metadata:",metaData);
+        const blockchainData=await blockchain.getFileFromBlockchain(metaData.fileDBId);
+        console.log("Blockchain Data:",blockchainData);
+        // const files=await blockchain.getFilesFromBlockchain();
         
-        if (blockchainData) {
-            console.log("Blockchain Success! CID:", blockchainData.cid);
+        if(blockchainData){
+            const blob=await getFileIPFS(blockchainData.cid);
+            const secretKey=await Encryption.decryptAESKeyWithLit(blockchainData.cipher,blockchainData.digest,chainId,account);
+            console.log("Secret Key:",secretKey);
             
-            // NEXT STEPS:
-            // 1. IPFS se data fetch karna using blockchainData.cid
-            // 2. blockchainData.key ko Lit Protocol se decrypt karna
+            const decryptedBuffer=await Encryption.decryptWithAES(blob,metaData.iv,metaData.authTag,secretKey);
+            const decryptedBlob=new Blob([decryptedBuffer],{type: "application/octet-stream"});
+            const url=URL.createObjectURL(decryptedBlob);
+            window.open(url, '_blank');
+            window.URL.revokeObjectURL(url);
         }
      }
      catch(err) {

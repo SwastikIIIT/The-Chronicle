@@ -132,15 +132,16 @@ class Blockchain {
   /**
    * Saving data on blockchain via smartContract
    * @param {string} cid 
-   * @param {string} encryptedKey 
+   * @param {string} cipher 
+   * @param {string} digest 
    * @param {string} fileDBId 
-   * @returns {Boolean}
+   * @returns {Promise<Boolean>}
    */
-  async saveToBlockchain(cid,encryptedKey,fileDBId){
+  async saveToBlockchain(cid,cipher,digest,fileDBId){
       try{
           if(!this.signer) await this.connectToWeb3();
           const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,VaultABI.abi,this.signer);
-          const tx=await vaultContract.addFile(cid,encryptedKey,fileDBId);
+          const tx=await vaultContract.addFile(cid,cipher,digest,fileDBId);
           const receipt=await tx.wait();
           console.log("Transaction Hash:",receipt.hash);
           return true;
@@ -173,24 +174,6 @@ class Blockchain {
   }
 
    /**
-   * Getting ALL files for the connected user
-   */
-   async getAllFilesFromBlockchain() {
-    try {
-       if(!this.provider || !this.account) await this.connectToWeb3();
-
-       const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,VaultABI.abi,this.provider);
-       const filesArray=await vaultContract.getFiles(this.account);
-       console.log("All User Files:",filesArray);
-       return filesArray;
-    }
-    catch (err) {
-      console.log('Error getFiles:', err);
-      return [];
-    }
-   }
-
-   /**
    * Getting a SINGLE file's CID and Key
    * @param {string} fileDBId 
    */
@@ -200,15 +183,28 @@ class Blockchain {
        if (!fileDBId) throw new Error("fileDBId is missing!");
 
        const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS, VaultABI.abi, this.signer);
-       const result=await vaultContract.getFile(fileDBId);
+       const [cid,cipher,digest]=await vaultContract.getFile(fileDBId);
   
-       console.log("Result:",result);
-
-       return result;
+       return {cid,cipher,digest};
     }
     catch (err) {
       console.log('Error getting single file:', err);
       return false;
+    }
+  }
+
+   /**
+   * Getting all files
+   */
+  async getFilesFromBlockchain() {
+    try {
+       const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS, VaultABI.abi, this.provider);
+       const files=await vaultContract.getFiles(this.account);
+  
+       return files;
+    }
+    catch (err) {
+      console.log('Error getting single file:', err);
     }
   }
 }
