@@ -1,4 +1,5 @@
 import { ethers, formatEther } from "ethers";
+import { VaultABI } from "./VaultABI";
 
 class Blockchain {
    provider = null;
@@ -8,9 +9,17 @@ class Blockchain {
 
    constructor() {}
 
-  /**
-  * Connecting with Blockchain (private or local/public testnet)
-  */
+/**
+ * Connects to the blockchain (private/local or public testnet).
+ * @returns {Promise<{
+ *   success: boolean;
+ *   account: string;
+ *   balance: string;
+ *   networkName: string;
+ *   chainId: string;
+ *   history: any[];
+ * }>}
+ */
   async connectToWeb3(){
       if(typeof window.ethereum==='undefined' || !window.ethereum)
         throw new Error("MetaMask is not installed. Please install it to use the Decentralized Vault");
@@ -50,9 +59,8 @@ class Blockchain {
       }
   } 
 
-  /**
+ /**
  * Get account information.
- *
  * @param {string} account - Ethereum account address.
  * @returns {Array<{
  *   from: string;
@@ -120,6 +128,89 @@ class Blockchain {
           throw new Error(err?.message || "Failed to fetch Ganache history");
       }
   };
+
+  /**
+   * Saving data on blockchain via smartContract
+   * @param {string} cid 
+   * @param {string} encryptedKey 
+   * @param {string} fileDBId 
+   * @returns {Boolean}
+   */
+  async saveToBlockchain(cid,encryptedKey,fileDBId){
+      try{
+          if(!this.signer) await this.connectToWeb3();
+          const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,VaultABI.abi,this.signer);
+          const tx=await vaultContract.addFile(cid,encryptedKey,fileDBId);
+          const receipt=await tx.wait();
+          console.log("Transaction Hash:",receipt.hash);
+          return true;
+      }
+      catch(err){
+        console.log("Error addFile:",err);
+        return false;
+      }
+  };
+  
+  /**
+   * Deleting file from blockchain
+   * @param {string} fileDBId 
+   * @returns {Boolean}
+   */
+  async deleteFromBlockchain(fileDBId){
+    try{
+      if(!this.signer) await this.connectToWeb3();
+      const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,VaultABI.abi,this.signer);
+      const tx=await vaultContract.deleteFile(fileDBId); 
+      const receipt=await tx.wait();
+      console.log("Tx Hash:",receipt.hash);
+      return true;
+    }
+    catch(err){
+      console.log("Error in deleteFile:",err);
+      return false;
+    }
+
+  }
+
+   /**
+   * Getting ALL files for the connected user
+   */
+   async getAllFilesFromBlockchain() {
+    try {
+       if(!this.provider || !this.account) await this.connectToWeb3();
+
+       const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,VaultABI.abi,this.provider);
+       const filesArray=await vaultContract.getFiles(this.account);
+       console.log("All User Files:",filesArray);
+       return filesArray;
+    }
+    catch (err) {
+      console.log('Error getFiles:', err);
+      return [];
+    }
+   }
+
+   /**
+   * Getting a SINGLE file's CID and Key
+   * @param {string} fileDBId 
+   */
+  async getFileFromBlockchain(fileDBId) {
+    try {
+       if(!this.signer) await this.connectToWeb3();
+       if (!fileDBId) throw new Error("fileDBId is missing!");
+
+       const vaultContract=new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS, VaultABI.abi, this.signer);
+       const result=await vaultContract.getFile(fileDBId);
+  
+       console.log("Result:",result);
+
+       return result;
+    }
+    catch (err) {
+      console.log('Error getting single file:', err);
+      return false;
+    }
+  }
 }
 
 const blockchain=new Blockchain();

@@ -1,31 +1,47 @@
 "use server";
-import encryption from "@/classes/encryption";
+import { decryptAESKeyWithLit, encryptAesKeywithLit } from "@/helper/Lit";
 import { getCookies } from "./api";
-import Encryption from "@/classes/encryption";
+import Encryption from "@/services/encryption";
 
-/**
- * AES key generation -> Data encryption (Symmetric Encryption) -> AES encrypt + Upload to IPFS
- * @param {string} publicKey - Abhi pata nhi
- * @param {} file - File to be uploaded
- * @returns 
+ /**
+ * Flow:
+ * 1. Generate AES key
+ * 2. Encrypt file using symmetric encryption via (AES)
+ * 3. Upload encrypted file to IPFS
+ * 4. Encrypt AES key via Lit Protocol (Decentralized key management - Threshold Cryptography)
+ *
+ * @param {string} address - User's wallet address
+ * @param {string} chainId - Chain Id like sepolia 
+ * @param {File} file - File to be encrypted and uploaded
+ *
+ * @returns {Promise<{
+ *   success: boolean;
+ *   message?: string;
+ *   metaInfo: {
+ *     type:string,
+ *     name:string,
+ *     size:string,
+ *     fileDBId:string
+ *   };
+ *   cid:string,
+ *   key:string
+ * }>}
  */
-export const uploadToIPFS = async (publicKey, file) => {
+export const uploadToIPFS=async (address,chainId,file) => {
   try {
-    // console.log("Public Key:", publicKey);
     const cookie = await getCookies();
+    // 1. Key Generation
+    const key=Encryption.generateAES();
+    console.log("Key:",key);
+    // 2. File Encryption (Symmetric)
+    const fileBuffer=Buffer.from(await file.arrayBuffer());
+    const { encryptedData }=Encryption.encryptWithAES(fileBuffer, key);
+    const encryptedFile=new File([encryptedData], file.name, {type: "application/octet-stream"});
 
-    // 1. AES key + File Encryption
-    const key =  encryption.generateAES();
-    // console.log("Key:", key);
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const { encryptedData } = encryption.encryptWithAES(fileBuffer, key);
-  
-    const encryptedFile = new File([encryptedData], file.name, {type: "application/octet-stream"});
-   
     const formData = new FormData();
-    formData.append("doc", encryptedFile); // Symmetric Encryption
+    formData.append("doc", encryptedFile); 
 
-    // 2. Upload encryptedFile to IPFS
+    // 3. Upload encryptedFile to IPFS
     const result = await fetch(`${process.env.BACKEND_URL}/api/web3/ipfs`, {
       method: "POST",
       headers: {
@@ -36,15 +52,16 @@ export const uploadToIPFS = async (publicKey, file) => {
     const data = await result.json();
     if (!result.ok) throw new Error(result.error);
 
-    // 2. AES key encrypt with metamask key + CID
-    const cid = result.headers.get("IPFS-CID");
-    // const encryptedAES = await encryption.encryptAesKey(key, publicKey); // Asymmetric Encryption
-    // console.log("Encrypted AES:", encryptedAES);
+    const cid=result.headers.get("IPFS-CID");
+    // 4. Encrypt AES key via Lit (Like Shamir-Secret-Sharing)
+    const encryptedAES = await encryptAesKeywithLit(key,address,chainId); 
 
     return {
-      success: true,
-      metaInfo :data.uploadedFile,
+      success:true,
       message: data?.message,
+      metaInfo:data.uploadedFile,
+      cid,
+      key: encryptedAES?.litResponse?.ciphertext
     };
   } catch (err) {
     console.error("Error while uploading file:", err);
@@ -54,7 +71,7 @@ export const uploadToIPFS = async (publicKey, file) => {
 
 /**
  * Store file metadata information in DB
- * @returns {[]} Array of fileData - File Metadata
+ * @returns {Promise<File[]>} Array of fileData - File Metadata
  */
 export const uploadedFileInfo = async()=>{
   try{
@@ -75,9 +92,14 @@ export const uploadedFileInfo = async()=>{
 } 
 
 /**
- * Delete File MetaData from DB and ipfs
- * @param {Object} metaData - File meta information
- * @returns {void}
+ * Delete File MetaData from DB and IPFS
+ * @param {{
+ *          type:string,
+ *          name:string,
+ *          size:string,
+ *          fileDBId:string
+ *         }} metaData - File meta information
+ * @returns {Promise<void>}
  */
 export const deleteFileData=async(metaData)=>{
   try{
@@ -91,7 +113,6 @@ export const deleteFileData=async(metaData)=>{
         body:JSON.stringify(metaData)
       });
       const data=await result.json();
-      console.log(data);
       if(!result.ok) throw new Error(data.error);
 
       return{

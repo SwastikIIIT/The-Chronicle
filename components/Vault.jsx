@@ -27,6 +27,8 @@ import Table from "./web3/Table";
 import blockchain from "@/services/blockchain";
 import { deleteFileData, uploadedFileInfo, uploadToIPFS } from "@/server/web3.api";
 import FileLayout from "./web3/FileLayout";
+import Encryption from "@/services/encryption";
+import { decryptAESKeyWithLit, encryptAesKeywithLit } from "@/helper/Lit";
 
 
 const Info = [
@@ -58,9 +60,9 @@ const Vault = () => {
   const [fileMetadata, setFileMetaData] = useState([]);
   const [history, setHistory] = useState([]);
 
+  const [step,setStep]=useState('IDLE');
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const setupWeb3 = async () => {
@@ -117,44 +119,39 @@ const Vault = () => {
   };
 
   const handleSubmit = async () => {
-    if (!file || isUploading) return;
-
-    setIsUploading(true);
+    if (!file || isLoading) return;
+  
+    setIsLoading(true);
     try {
-      // const accounts = await window.ethereum.request({
-      //   method: "eth_accounts",
-      // });
-      // console.log("Account:", accounts[0]);
-      // const publicKey = await window.ethereum.request({
-      //   method: "eth_getEncryptionPublicKey",
-      //   params: [accounts[0]],
-      // });
-      const result = await uploadToIPFS("dfaf", file);
+      setStep('UPLOAD_BLOCKCHAIN');
+      const result = await uploadToIPFS(web3Info.account,web3Info.chainId,file);
+      await blockchain.saveToBlockchain(result.cid,result.key,result.metaInfo.fileDBId);
+      
+      // Decrypytion for testing purpose now here
+      // const decryptedAES=await Encryption.decryptAESKeyWithLit(result.encryptedAES.litResponse,web3Info.chainId,web3Info.account);
+      // console.log("Decryption AES:",decryptedAES);
       toast.success("Success", { description: result?.message });
       setFile(null);
       setFileMetaData((prev)=>[...prev,result.metaInfo]);
-      setIsUploading(false);
+      setIsLoading(false);
     } catch (error) {
       console.log("Error in handleSubmit:", error);
       toast.error("Upload failed", { description: error?.message || "Upload to IPFS failed",});
     } finally {
-      setIsUploading(false);
+      setIsLoading(false);
     }
   };
 
   const handleDelete=async(metaData)=>{
       setIsLoading(true);
       try{
+          setStep("DELETE_IPFS_AND_BLOCKCHAIN");
           const result=await deleteFileData(metaData);
           setFileMetaData((prev)=>{
-            const filtered= prev.filter((item)=>!(
-              item.name===metaData.name &&
-              item.size===metaData.size &&
-              item.type===metaData.type &&
-              item.uploadedAt===metaData.uploadedAt 
-            ))
+            const filtered=prev.filter((item)=>item.fileDBId!=metaData.fileDBId)
             return filtered;
           })
+          await blockchain.deleteFromBlockchain(metaData.fileDBId);
           if(result.success) toast.success("Success",{description:result.message})
       }
       catch(err)
@@ -167,7 +164,7 @@ const Vault = () => {
       }
   }
 
-  if (isLoading || isUploading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center z-50">
         <motion.div
@@ -175,8 +172,11 @@ const Vault = () => {
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         />
-        <p className="mt-4 text-purple-500/80 font-mono text-sm animate-pulse">
-          {isLoading && "Loading..."} {isUploading && "Uploading..."}
+        <p className="mt-4 text-purple-500/80 font-mono text-sm animate-pulse"> 
+          {isLoading && "Loading..."}
+          {/* {isLoading && step==="UPLOAD_IPFS" && "Uploading to IPFS..."}
+          {isLoading && step==='SAVE_BLOCKCHAIN' && "Saving on blockchain..."}
+          {isLoading && step==='DELETE_IPFS_AND_DB' && "Deleting records from IPFS and DB..."} */}
         </p>
       </div>
     );
@@ -376,7 +376,8 @@ const Vault = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <FileLayout fileMetadata={fileMetadata} handleDelete={handleDelete}/>
+            <FileLayout fileMetadata={fileMetadata} handleDelete={handleDelete}
+            />
           </motion.div>
         </div>
       </motion.div>

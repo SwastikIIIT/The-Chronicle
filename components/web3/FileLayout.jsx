@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Search } from 'lucide-react'
 import { FileIcon } from 'lucide-react'
@@ -6,10 +6,46 @@ import { ExternalLink } from 'lucide-react'
 import { Trash2 } from 'lucide-react'
 import { calcSize, timeAgo } from '@/lib/utils'
 import { ShieldCheck } from 'lucide-react'
+import blockchain from '@/services/blockchain'
 
 
 const FileLayout = ({fileMetadata,handleDelete}) => {
- 
+  const [filtered,setFiltered]=useState(fileMetadata);
+
+  const handleSearch=(e)=>{
+    const input=e.target.value.toLowerCase();
+    setFiltered(()=>{
+        const filtered=fileMetadata.filter((data)=>
+            data.type.toLowerCase().includes(input) || 
+            data.name.toLowerCase().includes(input) ||
+            data.size.toString().toLowerCase().includes(input)
+        )
+        return filtered;
+     })
+  }
+
+  const handleViewFile=async(metaData)=>{
+     try {
+        console.log("Viewing file...",metaData._id);
+
+        const blockchainData=await blockchain.getFileFromBlockchain(metaData._id);
+        const files=await blockchain.getAllFilesFromBlockchain();
+        console.log('File:',blockchainData);
+        console.log('File:',files);
+        
+        if (blockchainData) {
+            console.log("Blockchain Success! CID:", blockchainData.cid);
+            
+            // NEXT STEPS:
+            // 1. IPFS se data fetch karna using blockchainData.cid
+            // 2. blockchainData.key ko Lit Protocol se decrypt karna
+        }
+     }
+     catch(err) {
+        console.log("Component Error:", err);
+     }
+  }
+
   return (
     <Card className="bg-black border border-purple-900/40 shadow-lg hover:shadow-purple-900/20 transition-all h-full">
         <CardHeader className="border-b border-purple-900/30">
@@ -29,15 +65,16 @@ const FileLayout = ({fileMetadata,handleDelete}) => {
                 />
                 <input
                     type="text"
-                    placeholder="Search in vault..."
-                    className="bg-white/5 border border-white/25 text-white rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-purple-500/50"
+                    onChange={handleSearch}
+                    placeholder="Search by type / name / size"
+                    className="w-full bg-white/5 border border-white/25 text-white rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-purple-500/50"
                 />
             </div>
             <div className="space-y-4">
-              {fileMetadata.length>0 ?
-               (fileMetadata.map((item,index) => (
+              {filtered.length>0 ?
+               (filtered.map((item,_) => (
                 <div
-                    key={index}
+                    key={item.fileDBId}
                     className="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all"
                 >
                    <div className="flex items-center gap-4">
@@ -53,8 +90,9 @@ const FileLayout = ({fileMetadata,handleDelete}) => {
                    </div>
                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                            title="View on IPFS"
-                            className="p-2 hover:bg-white/10 rounded-md text-gray-400 hover:text-white"
+                            title="View on Browser"
+                            onClick={async()=>await handleViewFile(item)}
+                            className="cursor-pointer p-2 hover:bg-white/10 rounded-md text-gray-400 hover:text-white"
                         >
                             <ExternalLink size={18} />
                         </button>
