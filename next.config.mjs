@@ -16,13 +16,25 @@ const nextConfig = {
       ],
   },
 
-  webpack(config) {
+  webpack(config,{isServer}) {
     config.experiments = {
       ...config.experiments,
       topLevelAwait: true,
     };
+    if(!isServer){ 
+        config.resolve.fallback = {
+          ...config.resolve.fallback,
+          fs: false,
+          net: false,
+          tls: false,
+          crypto: false,
+          path: false,
+          os: false,
+          events: false,
+        };
+      }
     return config;
-  },
+  }
 };
 
 export default nextConfig;
