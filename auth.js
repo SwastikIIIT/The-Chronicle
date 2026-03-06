@@ -93,6 +93,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "credentials") {
         return true;
       }
+      if(account?.provider === "google"){
+        return true;
+      }
       return false;
     },
     async jwt({ token, user }) {
