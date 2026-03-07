@@ -57,45 +57,46 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log("Account in signIn callback:", account);
       console.log("Profile in signIn callback:", profile);
 
-      // if (account?.provider === "google") {
-      //   try {
-      //     await connectToMongo();
-      //     const { email, name, picture, sub } = profile;
-      //     console.log("Mongo connected");
-      //     console.log("profile:", { email, name, picture, sub });
-      //     const userExists = await User.findOne({ email: email });
+      if(account?.provider==="google") {
+        try {
+            const { email, name, picture, sub } = profile;
+            console.log("profile:", { email, name, picture, sub });
+            
+            const res = await fetch(`${process.env.BACKEND_URL}/api/oauth/google`, {
+            method: "POST",
+            headers: {
+              "Content-type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              name,
+              image: picture,
+              providerId: sub,
+              provider: "google",
+            }),
+          });
 
-      //     if (!userExists) {
-      //       const response = await fetch("https://api.ipify.org?format=json");
-      //       const ipAddress = await response.json();
-      //       const user = await User.create({
-      //         email: email,
-      //         username: name,
-      //         password: crypto.randomBytes(16).toString("hex").slice(0, 16),
-      //         image: picture,
-      //         googleId: sub,
-      //         lastLogin: new Date(),
-      //       });
+          const result = await res.json();
+          if (!res.ok) {
+            console.error("Backend OAuth Error:", result.error);
+            return false;
+          }
 
-      //       await recordLoginHistory(user, ipAddress?.ip, true);
-      //       // await user.save();
-      //       console.log("New user created:", user);
-      //     } else {
-      //       userExists.lastLogin = new Date();
-      //       await userExists.save();
-      //     }
-      //     return true;
-      //   } catch (err) {
-      //     console.log("Error signing in with Google", err);
-      //   }
-      //   return true;
-      // }
-      if (account?.provider === "credentials") {
-        return true;
+          user.userId = result.userId;
+          user.name=result.name;
+          user.email=result.email;
+          user.image=result.image;
+          user.hasTwoFactor = result.hasTwoFactor;
+
+          return true;
+        } catch (err) {
+          console.log("Error signing in with Google", err);
+          return false;
+        }
       }
-      if(account?.provider === "google"){
-        return true;
-      }
+
+      if (account?.provider === "credentials") return true;
+      
       return false;
     },
     async jwt({ token, user }) {

@@ -172,7 +172,7 @@ const LoginForm = () => {
         </div>
       </form>
 
-      {/* <form action={handleAuthLogin}>
+      <form action={handleAuthLogin}>
         <Button
           variant="outline"
           className="w-full border-purple-900/60 cursor-pointer hover:border-purple-500 text-black hover:bg-purple-900/20 hover:text-white transition-all duration-300 flex items-center justify-center gap-3 py-2"
@@ -189,7 +189,7 @@ const LoginForm = () => {
           </svg>
           <span>Login with Google</span>
         </Button>
-      </form> */}
+      </form>
 
       <div className="text-center text-gray-400 text-sm mt-2">
         Don&apos;t have an account?{" "}
