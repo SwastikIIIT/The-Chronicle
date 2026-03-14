@@ -63,6 +63,68 @@ export const fetchUserInfo = async () => {
   }
 };
 
+export const biometricSetup = async(email) => {
+  try{
+      const cookie=await getCookies();
+      const response=await fetch(`${process.env.BACKEND_URL}/api/auth/user/biometric/setup`,{
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+           Cookie: `backend_token=${cookie}`
+        },
+        body: JSON.stringify({ email: email })
+      });
+      const data=await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to get setup options");
+      return data;
+  }
+  catch(err)
+  {
+      console.error("Biometric setup error:", err);
+      throw new Error("Biometric setup failed. Please try again.");
+  }
+}
+
+export const verifyBiometricRegistration=async (attestationResponse) => {
+  try {
+      const cookie=await getCookies();
+      const res = await fetch(`${process.env.BACKEND_URL}/api/auth/user/biometric/challenge-verify`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Cookie: `backend_token=${cookie}`
+        },
+        body: JSON.stringify({attestationResponse})
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Verification failed on server");
+      
+      return data;
+  } catch (err) {
+      console.error("Setup verification error:", err);
+      throw err;
+  }
+}
+
+export const biometricVerify= async(email)=>{
+  try{
+      const res=await fetch(`${process.env.BACKEND_URL}/api/auth/biometric/options`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email }) 
+      });
+      const options=await res.json();
+      if (!res.ok) throw new Error(options.error || "Failed to get login options");
+      return options;
+  }
+  catch(err)
+  {
+      console.error("Biometric verification error:", err);
+      return {error:err.message || "Biometric verification failed or was cancelled."};
+  }
+}
+
 export const uploadImage = async (formData) => {
   try{
     const cookie=await getCookies();

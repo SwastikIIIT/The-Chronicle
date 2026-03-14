@@ -14,10 +14,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
         twoFactorToken: { label: "2FA Code", type: "text" },
+        isBiometric: { label: "Use Biometric", type: "boolean" },
+        biometricData: { label: "Biometric Data", type: "text" },
       },
 
       async authorize(credentials, req) {
         const userAgent = req.headers.get("user-agent");
+
+        if(credentials.isBiometric==="true") {
+          const res=await fetch(`${process.env.BACKEND_URL}/api/auth/biometric/login`, {
+            method: "POST",
+            headers: { 
+              "Content-type": "application/json",
+              "User-Agent": userAgent
+           },
+            body: JSON.stringify({
+                email: credentials.email,
+                data: JSON.parse(credentials.biometricData)
+            })
+          });
+          const result = await res.json();
+          console.log(result);
+          if(!res.ok) throw new Error(result.error);
+          return result;
+        }
+
         const res = await fetch(`${process.env.BACKEND_URL}/api/auth/login`, {
           method: "POST",
           headers: {

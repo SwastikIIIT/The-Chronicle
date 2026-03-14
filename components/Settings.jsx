@@ -20,9 +20,10 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
-import { fetchUserInfo, saveImage, uploadImage } from "@/server/api";
+import { biometricSetup, fetchUserInfo, saveImage, uploadImage, verifyBiometricRegistration } from "@/server/api";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
+import { Fingerprint } from "lucide-react";
+import {startRegistration} from '@simplewebauthn/browser'
 
 const Settings = ({session}) => {
   const [userInfo, setUserInfo] = useState("");
@@ -77,6 +78,36 @@ const Settings = ({session}) => {
       setIsUploading(false);
     }
   };
+
+  const handleBiometricSetup =async() => {
+      try{
+          console.log("Working...");
+          // 1. Get Challenge
+          const optionsBiometric=await biometricSetup(userInfo?.email);
+        
+          let attestationResponse;
+          try {
+              // 2. Trigger Fingerprint/FaceID
+              attestationResponse = await startRegistration(optionsBiometric);
+          }
+          catch(error)
+          {
+            console.error(error);
+              if (error.name === 'InvalidStateError') 
+                  throw new Error(error.message || "Error: Authenticator was probably already registered");
+
+              throw new Error(error.message || "Biometric setup was cancelled or failed on device.");
+          }
+          const result=await verifyBiometricRegistration(attestationResponse);
+          if(result.success) toast.success(result.message);
+          setUserInfo(prev=>({ ...prev, isBiometricEnabled: true }));
+      }
+      catch(err)
+      {
+        console.error(err);
+        toast.error(err.message || "Something went wrong")
+      }
+  }
 
   if (isLoading || isUploading) {
     return (
@@ -278,7 +309,7 @@ const Settings = ({session}) => {
                       Email Verification
                     </h3>
                     <p className="text-gray-400">
-                      {userInfo?.emailVerified
+                      {userInfo?.isVerified
                         ? "Your email has been verified"
                         : "Verify your email address to secure your account"}
                     </p>
@@ -294,6 +325,34 @@ const Settings = ({session}) => {
                       Verify Email
                     </Button>
                   </Link>
+                )}
+              </div>
+
+              {/* Biometric Auth */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between py-4 px-3 rounded-md hover:bg-purple-900/20 transition-colors">
+                <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                  <Fingerprint size={18} className="text-purple-500" />
+                  <div>
+                    <h3 className="text-lg font-medium text-white">
+                      Biometric Authentication
+                    </h3>
+                    <p className="text-gray-400">
+                      {userInfo?.isBiometricEnabled
+                        ? "Biometric security has been added to your account"
+                        : "Add biometric authentication for enhanced security and convenience"}
+                    </p>
+                  </div>
+                </div>
+                {userInfo?.isBiometricEnabled ? (
+                  <Button className="bg-green-600 hover:bg-green-700  text-white transition-colors disabled">
+                    Biometric Enabled
+                  </Button>
+                ) : (
+                    <Button className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white transition-colors"
+                      onClick={handleBiometricSetup}
+                    >
+                       Add Biometric Layer
+                    </Button>
                 )}
               </div>
             </CardContent>

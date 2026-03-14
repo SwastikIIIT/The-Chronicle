@@ -11,10 +11,16 @@ import { useState } from "react";
 import { Mail, Lock, Key, ArrowRight } from "lucide-react";
 import { EyeOff } from "lucide-react";
 import { EyeIcon } from "lucide-react";
+import { biometricVerify } from "@/server/api";
+import { Fingerprint } from "lucide-react";
+import { startAuthentication } from "@simplewebauthn/browser";
+import { handleBiometric } from "@/server/providers/handleBiometricLogin";
+
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [show2faField, set2faField] = useState(false);
+  const [email, setEmail] = useState("");
   const router = useRouter();
 
   const handleCredentialLogin = async (formData) => {
@@ -65,6 +71,31 @@ const LoginForm = () => {
     }
   };
 
+  const handleBiometricLogin = async () => {
+    if(!email) toast.error("Email is required.");
+    
+    try {
+      const biometricOptions=await biometricVerify(email);
+      console.log(biometricOptions)
+      if(biometricOptions.error) throw new Error(biometricOptions.error);
+      const authResp=await startAuthentication(biometricOptions);
+      console.log(authResp);
+    
+      const res=await handleBiometric(authResp,email);
+
+      if (res) {
+        toast.success("Biometric login successful!");
+        router.push("/home");
+      } else {
+        toast.error("Biometric verification failed");
+      }
+    }
+    catch(err) {
+       console.log("Biometric login error:", err);
+       toast.error(err.message || "Biometrics cancelled or failed");
+    }
+};
+
   return (
     <div className="flex flex-col gap-6">
       <form action={handleCredentialLogin}>
@@ -91,6 +122,7 @@ const LoginForm = () => {
                 name="email"
                 type="email"
                 placeholder="vasu@example.com"
+                onChange={(e) => setEmail(e.target.value)}
                 className="pl-3 pr-3 py-2 bg-black/40 border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder:text-gray-500"
               />
             </div>
@@ -160,6 +192,16 @@ const LoginForm = () => {
               size={16}
               className="group-hover:translate-x-1 transition-transform duration-300"
             />
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleBiometricLogin}
+            variant="outline"
+            className="cursor-pointer w-full border-purple-500/30 text-purple-400 hover:bg-purple-900/20 hover:text-purple-300 transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <Fingerprint size={18} />
+            <span>Login with Biometrics</span>
           </Button>
 
           <div className="relative flex items-center py-2">
