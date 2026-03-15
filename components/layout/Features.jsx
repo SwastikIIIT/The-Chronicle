@@ -1,41 +1,45 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Shield, Key, Lock, Users, Zap, Clock } from "lucide-react";
+import { Shield, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Network } from "lucide-react";
+import { Boxes } from "lucide-react";
+import { Fingerprint } from "lucide-react";
+import { Activity } from "lucide-react";
 
 const featuresList = [
   {
-    icon: <Shield className="text-purple-500 w-6 h-6" />,
-    title: "AES-256 Encryption",
+    icon: <Network className="text-purple-500 w-6 h-6" />,
+    title: "Decentralized IPFS Vault",
     description:
-      "Sensitive keys and 2FA secrets are encrypted at rest using the AES-256-CBC algorithm with unique initialization vectors.",
-  },
-  {
-    icon: <Lock className="text-purple-500 w-6 h-6" />,
-    title: "Adaptive Hashing",
-    description: "Passwords and recovery codes are irreversibly secured using Bcrypt with salt rounds optimized for hardware resistance.",
+      "Ensures highly available and tamper-resistant file hosting across the distributed InterPlanetary File System network.",
   },
   {
     icon: <Key className="text-purple-500 w-6 h-6" />,
-    title: "TOTP 2FA Integration",
+    title: "Lit Protocol & AES-256",
+    description: "Files are secured via AES-256, while private keys are managed via DKG to eliminate any single point of failure.",
+  },
+  {
+    icon: <Boxes className="text-purple-500 w-6 h-6" />,
+    title: "Ethereum Blockchain",
+    description: "Provides extremely secure and immutable storage integrity via custom smart contracts written in Solidity.",
+  },
+  {
+    icon: <Fingerprint className="text-purple-500 w-6 h-6" />,
+    title: "Multi-Layered Auth",
     description:
-      "Time-based One-Time Passwords compatible with Google Authenticator, enforcing a second layer of defense.",
+      "Identity verification through OAuth, Biometrics, and 2FA, securing application routes with JWT bridge cookies.",
   },
   {
-    icon: <Zap className="text-purple-500 w-6 h-6" />,
-    title: "Secure Recovery Flows",
-    description: "Cryptographically generated emergency backup codes ensure account access is never permanently lost.",
+    icon: <Activity className="text-purple-500 w-6 h-6" />,
+    title: "Real-Time Threat Logging",
+    description: "Tracks active sessions and utilizes Redis for instant blacklisting of suspicious IPs and account locking.",
   },
   {
-    icon: <Users className="text-purple-500 w-6 h-6" />,
-    title: "Identity Verification",
-    description: "Automated SMTP email challenges with short-lived, hashed tokens to validate user ownership.",
-  },
-  {
-    icon: <Clock className="text-purple-500 w-6 h-6" />,
-    title: "Anti-Spam Rate Limiting",
+    icon: <Shield className="text-purple-500 w-6 h-6" />,
+    title: "Automated Defense",
     description:
-      "Intelligent throttling on verification endpoints prevents brute-force attacks and abuse.",
+      "Server-side rate-limiting neutralizes brute-force attacks, while scheduled cron jobs run continuous security scans.",
   },
 ];
 
@@ -102,7 +106,7 @@ const Features = () => {
             viewport={{ once: true }}
             className="text-gray-300 text-xl max-w-3xl mx-auto"
           >
-            A zero-trust security system built with military-grade AES encryption, adaptive hashing, and multi-layered identity verification.
+            A zero-trust security system incorporating cryptographic algorithms,Ethereum smart contracts, and decentralized IPFS storage.
           </motion.p>
         </div>
 

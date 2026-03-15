@@ -7,11 +7,14 @@ const testimonials = [
   {
     quote: "Integrating blockchain technology to create an immutable, decentralized storage layer. This architecture will ensure zero-knowledge verification and provide a tamper-proof audit trail for enterprise compliance, preventing centralized data manipulation.",
     author: "Blockchain",
+    role: "Done",
   },
   {
     quote: "A context-aware support bot built on Retrieval-Augmented Generation (RAG). Unlike standard chatbots, the system will securely indexe documentation to instantly resolve complex authentication queries and guide users through recovery flows without human intervention.",
     author: "Artifical Intelligence",
+    role:"In Progress"
   },
+  
   // {
   //   quote:
   //     "The flexibility of this auth solution allowed us to customize the flow exactly to our brand's needs. Our conversion rate has improved dramatically.",

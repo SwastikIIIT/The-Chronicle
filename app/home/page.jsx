@@ -61,12 +61,12 @@ const AuthBackend = () => {
         </AlertDialog>
       )}
       <Hero
-        title="Advanced Access Control & Security Suite"
-        subtitle="Secure your digital assets with end-to-end encrypted verification, and secure recovery flows. Modern security, simplified"
+        title="The Next-Generation Decentralized Vault & Security Suite"
+        subtitle="Protect your digital assets with military-grade encryption, immutable blockchain storage, and intelligent threat monitoring. Total control, zero compromises."
         actions={[
           {
             label: "Get Started",
-            href: "/",
+            href: "/home/vault",
             variant: "primary",
           },
         ]}

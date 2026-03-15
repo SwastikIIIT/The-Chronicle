@@ -118,7 +118,7 @@ export const Hero = React.forwardRef((props, ref) => {
                 <Link key={index} href={action.href}>
                   <Button
                     variant={"default"}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="cursor-pointer bg-purple-600 hover:bg-purple-700"
                   >
                     {action.label}
                     <span
