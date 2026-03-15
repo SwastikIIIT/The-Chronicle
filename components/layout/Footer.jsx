@@ -37,7 +37,7 @@ const Footer = () => {
             <h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wider mb-4">Resources</h4>
             <ul className="space-y-3">
               <li>
-                <a href="https://github.com/SwastikIIIT/AuthBackend" target="_blank" className="text-gray-400 hover:text-purple-400 transition-colors">Source Code</a>
+                <a href="https://github.com/SwastikIIIT/The-Chronicle" target="_blank" className="text-gray-400 hover:text-purple-400 transition-colors">Source Code</a>
               </li>
               <li>
                 <a href="#" target="_blank" className="text-gray-400 hover:text-purple-400 transition-colors">System Architecture</a>

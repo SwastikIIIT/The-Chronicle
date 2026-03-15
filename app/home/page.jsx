@@ -1,4 +1,5 @@
 "use client";
+import CTA from "@/components/layout/CTA";
 import Features from "@/components/layout/Features";
 import { Hero } from "@/components/layout/Hero";
 import Testimonials from "@/components/layout/Testimonials";
@@ -72,6 +73,7 @@ const AuthBackend = () => {
         ]}
       />
       <Features />
+      <CTA/>
       <Testimonials />
     </>
   );
