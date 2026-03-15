@@ -8,7 +8,7 @@ import ResetPasswordForm from "./ResetPasswordForm";
 const ResetPasswordContent  = () => {
   const search = useSearchParams();
   const token = search.get("token");
-  const userId = search.get("id");
+  const email = search.get("email");
   const router = useRouter();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const ResetPasswordContent  = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <ResetPasswordForm token={token} userId={userId}/>
+      <ResetPasswordForm token={token} email={email}/>
     </div>
   );
 };

@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Lock, KeyRound, ArrowRight } from "lucide-react";
 import { handleResetPassword } from "@/server/api";
 
-const ResetPasswordForm = ({ token, userId }) => {
+const ResetPasswordForm = ({ token, email }) => {
   const [isSubmit, setSubmit] = useState(false);
   const router = useRouter();
 
@@ -18,7 +18,7 @@ const ResetPasswordForm = ({ token, userId }) => {
       description: "Updating your credentials",
     });
     formData.append("token", token);
-    formData.append("id", userId);
+    formData.append("email", email);
     try {
       const result = await handleResetPassword(formData);
       if (result.error) throw new Error(result?.error);

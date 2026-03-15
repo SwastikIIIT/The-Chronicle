@@ -323,7 +323,7 @@ export const handleResetPassword = async(formData) => {
     const newPass = formData.get("password");
     const confPass = formData.get("confirmpassword");
     const token = formData.get("token");
-    const userId = formData.get("id");
+    const email = formData.get("email");
     const cookie=await getCookies();
 
     if(newPass!==confPass) throw new Error("Passwords don't match");
@@ -337,7 +337,7 @@ export const handleResetPassword = async(formData) => {
                Cookie: `backend_token=${cookie}`
             },
             body: JSON.stringify({ 
-               userId,
+               email,
                token,
                newPassword: newPass
              })
