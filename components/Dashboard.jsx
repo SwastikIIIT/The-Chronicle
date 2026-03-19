@@ -69,7 +69,7 @@ const Dashboard = ({ session }) => {
       return [`Good Afternoon`, `${userInfo?.username}`];
     if (hour > 18 && hour <= 24)
       return [`Good Evening`, `${userInfo?.username}`];
-    if (hour > 0) return [`Good Morning`, `${userInfo?.username}`];
+    if (hour >= 0) return [`Good Morning`, `${userInfo?.username}`];
   };
 
   const calculateSecurityScore = (userInfo) => {

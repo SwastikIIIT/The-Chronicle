@@ -121,6 +121,43 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
+      if (account?.provider === "github") {
+        try {
+          const { email, name, login, avatar_url, id } = profile;
+
+          const res = await fetch(`${process.env.BACKEND_URL}/api/oauth/google`, {
+            method: "POST",
+            headers: {
+              "Content-type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              name,
+              image: avatar_url,
+              providerId: id.toString(), 
+              provider: "github",
+            }),
+          });
+
+          const result = await res.json();
+          if (!res.ok) {
+            console.error("Backend OAuth Error (GitHub):", result.error);
+            return false; 
+          }
+
+          user.userId = result.userId;
+          user.name = result.name;
+          user.email = result.email;
+          user.image = result.image;
+          user.hasTwoFactor = result.hasTwoFactor;
+
+          return true;
+        } catch (err) {
+          console.log("Error signing in with Github", err);
+          return false;
+        }
+      }
+
       if (account?.provider === "credentials") return true;
       
       return false;
