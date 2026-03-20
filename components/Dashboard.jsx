@@ -58,9 +58,9 @@ const Dashboard = ({ session }) => {
     fetchUser();
   }, [session]);
 
-  const lastDeviceInfo = (loginHistory) => {
+ const lastDeviceInfo = (loginHistory) => {
     const recentLogin = loginHistory[loginHistory.length - 1];
-    return `${recentLogin.device} from ${recentLogin.location.city},${recentLogin.location.country} approx`;
+    return `${recentLogin.device} from ${recentLogin.location.region},${recentLogin.location.country}`;
   };
 
   const greeting = () => {
