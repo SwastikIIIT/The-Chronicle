@@ -1,38 +1,29 @@
 "use client";
 import { AlertCircle, ArrowRight, CheckCircle, Mail, Send } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
-import sendEmail from "@/helper/eventHandler/sendEmail";
-import handleCodeCheck from "@/helper/formcontrols/handleCodeCheck";
-import fetchUserInfo from "@/helper/eventHandler/fetchUserInfo";
+import { fetchUserInfo, sendEmail, verifyCode } from "@/server/api";
 import { Button } from "../ui/button";
+import { useSession } from "next-auth/react";
 
-const EmailVerification = () => {
-  const { data: session } = useSession();
+const EmailVerification = ({session}) => {
   const [step, setStep] = useState("initial");
-  const [userData, setUserData] = useState("");
+  const [userInfo, setUserInfo] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
       const toastID = toast.loading("Processing request...");
       try {
         const result = await fetchUserInfo();
-        if (result.success) {
-          toast.success("Loading successful", {
-            id: toastID,
-            description: result.message,
-          });
-          setUserData(result.userData);
-        } else {
-          toast.error("Loading unsuccessful", {
-            id: toastID,
-            description: result.message,
-          });
-        }
+        if (result?.error) throw new Error(result?.error);
+        toast.success("Loading successful", {
+          id: toastID,
+          description: result.message,
+        });
+        setUserInfo(result?.userData);
       } catch (err) {
         console.log(err);
         toast.error("Loading unsuccessful", {
@@ -40,60 +31,39 @@ const EmailVerification = () => {
           description: "Failed to load user data",
         });
       } finally {
-        setTimeout(() => {
-          toast.dismiss(toastID);
-        }, 2000);
+        setTimeout(() => toast.dismiss(toastID), 2000);
       }
     };
     fetchUser();
   }, [session]);
 
-  const checkCode = async (formData) => {
+  const verifyEmailCode = async (formData) => {
     const toastID = toast.loading("Processing request...", {
       description: "Verifying your code",
     });
     try {
-      const result = await handleCodeCheck(formData);
-      if (result.success) {
-        toast.success("Verification successful", {
-          id: toastID,
-          description: result.message,
-        });
-        setStep("success");
-      } else {
-        toast.error("Verification failed", {
-          id: toastID,
-          description: result.message,
-        });
-      }
+      const result = await verifyCode(formData, userInfo?.email);
+      if (result.error) throw new Error(result?.error);
+      toast.success("Success", { id: toastID, description: result.message });
+      setStep("success");
     } catch (err) {
-      toast.error("Verification failed", {
-        id: toastID,
-        description: err.message,
-      });
+      toast.error("Error", { id: toastID, description: err.message });
     } finally {
-      setTimeout(() => {
-        toast.dismiss(toastID);
-      }, 3000);
+      setTimeout(() => toast.dismiss(toastID), 3000);
     }
   };
 
-  const verification = async () => {
+  const sendVerificationCode = async () => {
     const toastID = toast.loading("Processing request...");
     try {
-      const response = await sendEmail();
-      if (response.success) {
-        toast.success(response.message, { id: toastID });
-        setStep("verification");
-      } else {
-        toast.error(response.message, { id: toastID });
-      }
+      const response = await sendEmail(userInfo?.email);
+      if (response.error) throw new Error(response?.error);
+      toast.success("Success", { id: toastID, description: response.message });
+      setStep("verification");
     } catch (err) {
-      toast.error(err.message, { id: toastID });
+      toast.error("Error", { id: toastID, description: err?.message });
     } finally {
-      setTimeout(() => {
-        toast.dismiss(toastID);
-      }, 3000);
+      setTimeout(() => toast.dismiss(toastID), 3000);
     }
   };
 
@@ -121,7 +91,7 @@ const EmailVerification = () => {
             </p>
           </div>
 
-          {userData?.isVerified ? (
+          {userInfo?.isVerified ? (
             <>
               <div className="flex items-center gap-2 justify-center bg-black/30 p-3 rounded-lg border border-purple-900/30">
                 <CheckCircle size={18} className="text-green-400" />
@@ -152,12 +122,12 @@ const EmailVerification = () => {
               <div className="bg-black/40 p-4 rounded-lg border border-purple-900/40">
                 <h3 className="font-medium text-gray-300 mb-2">Your Email</h3>
                 <p className="text-gray-300 bg-black/60 p-3 rounded-md border border-purple-900/40 break-all">
-                  {userData?.email}
+                  {userInfo?.email}
                 </p>
               </div>
 
               <Button
-                onClick={verification}
+                onClick={sendVerificationCode}
                 className="cursor-pointer w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-medium py-2 flex items-center justify-center gap-2 group transition-all duration-300"
               >
                 <span>Send Verification Code</span>
@@ -184,12 +154,12 @@ const EmailVerification = () => {
             </h3>
             <p className="text-gray-400 text-sm text-center">
               We've sent a verification email to{" "}
-              <span className="text-purple-400">{userData?.email}</span>. Please
+              <span className="text-purple-400">{userInfo?.email}</span>. Please
               check your inbox and follow the link to verify your email address.
             </p>
           </div>
 
-          <form action={checkCode} className="space-y-4">
+          <form action={verifyEmailCode} className="space-y-4">
             <div className="grid gap-3">
               <Label
                 htmlFor="verificationCode"

@@ -11,6 +11,7 @@ import {
   } from "@/components/ui/alert-dialog";
   import { Button } from "@/components/ui/button";
   
+
   export default function Alert() {
     return (
       <div className="flex items-center justify-center h-screen">

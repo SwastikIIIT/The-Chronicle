@@ -1,10 +1,10 @@
-
+import { auth } from '@/auth';
 import EmailVerification from '@/components/auth/EmailVerification'
-import React from 'react'
 
-const VerifyEmailPage = () => {
+const VerifyEmailPage = async () => {
+  const session = await auth();
   return (
-    <EmailVerification/>
+    <EmailVerification  session={session}/>
   )
 }
 

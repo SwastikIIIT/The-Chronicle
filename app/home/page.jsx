@@ -1,7 +1,8 @@
 "use client";
-import Features from "@/components/Features";
-import { Hero } from "@/components/hero";
-import Testimonials from "@/components/Testimonials";
+import CTA from "@/components/layout/CTA";
+import Features from "@/components/layout/Features";
+import { Hero } from "@/components/layout/Hero";
+import Testimonials from "@/components/layout/Testimonials";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,19 +62,19 @@ const AuthBackend = () => {
         </AlertDialog>
       )}
       <Hero
-        title="Secure Authentication for Modern Apps"
-        subtitle="Experience seamless authentication and authorization with our cutting-edge security system."
+        title="The Next-Generation Decentralized Vault & Security Suite"
+        subtitle="Protect your digital assets with military-grade encryption, immutable blockchain storage, and intelligent threat monitoring. Total control, zero compromises."
         actions={[
           {
             label: "Get Started",
-            href: "/start",
+            href: "/home/vault",
             variant: "primary",
           },
         ]}
       />
       <Features />
+      <CTA/>
       <Testimonials />
-      {/* <Footer/> */}
     </>
   );
 };

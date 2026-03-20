@@ -1,14 +1,10 @@
 "use client";
-import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import startSetup from "@/helper/eventHandler/startSetup";
-import disable2FA from "@/helper/eventHandler/disable2FA";
 import { toast } from "sonner";
-import handleVerify2FA from "@/helper/formcontrols/handleVerify2FA";
 import {
   Shield,
   QrCode,
@@ -19,7 +15,12 @@ import {
   PencilLine,
 } from "lucide-react";
 import Link from "next/link";
-import fetchUserInfo from "@/helper/eventHandler/fetchUserInfo";
+import {
+  disable2FA,
+  fetchUserInfo,
+  handleVerify2FA,
+  startSetup,
+} from "@/server/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,86 +33,73 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { TriangleAlert } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
+import { Copy } from "lucide-react";
+import { useSession } from "next-auth/react";
 
-const TwoFactorComponent = () => {
-  const { data: session } = useSession();
-  const router = useRouter();
+const TwoFactorComponent = ({session}) => {
   const [step, setStep] = useState("initial");
   const [secret, setSecret] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [qrcode, setQrcode] = useState("");
   const [hasTwoFactor, setHasTwoFactor] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const result = await fetchUserInfo();
-        if (result.success && result?.userData?.twoFactorEnabled) {
-          setHasTwoFactor(true);
-        }
+        if (result?.error) throw new Error(result?.message);
+        if (result?.userData?.twoFactor?.enabled) setHasTwoFactor(true);
       } catch (err) {
         console.log(err);
+        toast.error("Error", {
+          description: err?.message || "Failed to load user details",
+        });
       }
     };
     fetchUser();
-  }, [session, router]);
+  }, [session]);
 
   const handleVerify = async (formData) => {
     const toastID = toast.loading("Processing request...", {
       description: "Verifying your authentication code",
     });
-    formData.append("secret", secret);
     try {
       const result = await handleVerify2FA(formData);
-      if (result.success) {
+      if (result?.recoveryCodes) {
         toast.success("Verification successful", {
           id: toastID,
           description: result.message,
         });
+        setRecoveryCodes(result.recoveryCodes || []);
         setHasTwoFactor(true);
         setStep("success");
-      } else {
-        toast.error("Verification failed", {
-          id: toastID,
-          description: result.message,
-        });
-      }
+      } else throw new Error(result?.error);
     } catch (err) {
       toast.error("Verification failed", {
         id: toastID,
         description: err.message,
       });
     } finally {
-      setTimeout(() => {
-        toast.dismiss(toastID);
-      }, 5000);
+      setTimeout(() => toast.dismiss(toastID), 5000);
     }
   };
 
-  const disable_2FA = async () => {
+  const disableTwoFactor = async () => {
     const toastID = toast.loading("Processing request...", {
       description: "Disabling two-factor authentication",
     });
     try {
       const result = await disable2FA();
-      if (result.success) {
-        toast.success("Two Factor Disabled", {
-          id: toastID,
-          description: result.message,
-        });
-        setHasTwoFactor(false);
-      } else {
-        toast.error(result.message, { id: toastID });
-      }
+      if (result.error) throw new Error(result?.error);
+
+      toast.success("Success", { id: toastID, description: result.message });
+      setHasTwoFactor(false);
     } catch (err) {
-      toast.error("Failed to disable 2FA", {
-        id: toastID,
-        description: err.message,
-      });
+      toast.error("Error", { id: toastID, description: err.message });
     } finally {
-      setTimeout(() => {
-        toast.dismiss(toastID);
-      }, 5000);
+      setTimeout(() => toast.dismiss(toastID), 5000);
     }
   };
 
@@ -121,7 +109,7 @@ const TwoFactorComponent = () => {
     });
     try {
       const result = await startSetup();
-      if (result.success) {
+      if (result.qr) {
         setQrcode(result.qr);
         setSecret(result.secret);
         setStep("setup");
@@ -129,12 +117,11 @@ const TwoFactorComponent = () => {
           id: toastID,
           description: "Scan the QR code with your authenticator app",
         });
-      } else {
+      } else
         toast.error("Setup Failed", {
           id: toastID,
-          description: result?.message,
+          description: result?.error,
         });
-      }
     } catch (err) {
       console.log(err);
       toast.error("Setup Failed", { id: toastID });
@@ -144,7 +131,16 @@ const TwoFactorComponent = () => {
       }, 5000);
     }
   };
-  console.log("Has Two Factor", hasTwoFactor);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(secret);
+    setCopied(true);
+    toast.info("Information", { description: "Copied to clipboard" });
+    setTimeout(() => {
+      setCopied(false);
+    }, 3000);
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full max-w-md mx-auto">
       <div className="flex flex-col items-center gap-2 text-center mb-6">
@@ -208,7 +204,7 @@ const TwoFactorComponent = () => {
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={disable_2FA}
+                      onClick={disableTwoFactor}
                       className="cursor-pointer bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
                     >
                       <span>Continue</span>
@@ -265,8 +261,16 @@ const TwoFactorComponent = () => {
             <p className="text-gray-400 text-sm">
               You can manually enter this secret key in your authenticator app:
             </p>
-            <div className="bg-black/60 p-3 rounded-md border border-purple-900/40 mt-2 font-mono text-sm text-center break-all text-gray-300">
+            <div className="relative bg-black/60 p-3 rounded-md border border-purple-900/40 mt-2 font-mono text-sm text-center break-all text-gray-300">
               {secret}
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="absolute top-3.5 right-3.5 cursor-pointer"
+                title="Copy to clipboard"
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+              </button>
             </div>
           </div>
 
@@ -282,7 +286,7 @@ const TwoFactorComponent = () => {
               <div className="relative">
                 <Input
                   name="token"
-                  type="text"
+                  type="password"
                   placeholder="Enter 6-digit code"
                   className="pl-3 pr-3 py-2 bg-black/40 border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder:text-gray-500"
                 />
@@ -321,17 +325,37 @@ const TwoFactorComponent = () => {
             </p>
           </div>
 
-          <div className="bg-black/40 p-5 rounded-lg border border-purple-900/40">
-            <h3 className="font-medium text-gray-300 mb-2 flex items-center gap-2">
-              <AlertCircle size={16} className="text-purple-400" />
-              Important
-            </h3>
-            <p className="text-gray-400 text-sm">
-              If you lose access to your authenticator app, you'll need to use
-              the recovery options (like backup codes or email recovery) to
-              regain access to your account.
-            </p>
-          </div>
+          {recoveryCodes.length > 0 && (
+            <div className="bg-orange-500/5 p-5 rounded-xl border border-orange-500/20">
+              <div className="flex items-center gap-2 mb-3 text-orange-400">
+                <AlertCircle size={18} />
+                <span className="font-semibold text-sm">
+                  Save your recovery codes!
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 mb-4">
+                If you lose access to your authenticator app, you'll need to use
+                the recovery codes to regain access to your account.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {recoveryCodes.map((code, i) => (
+                  <div
+                    key={i}
+                    className="bg-black/40 p-2 rounded border border-white/5 font-mono text-xs text-center text-gray-200"
+                  >
+                    {code}
+                  </div>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                className="w-full mt-4 text-xs border-orange-500/30 text-orange-400 "
+                onClick={() => window.print()}
+              >
+                Print or Save Codes
+              </Button>
+            </div>
+          )}
 
           <Link href="/home/settings">
             <Button className="cursor-pointer w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-medium py-2 flex items-center justify-center gap-2 group transition-all duration-300">

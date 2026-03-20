@@ -1,11 +1,9 @@
-import Dashboard from '@/components/Dashboard'
-import React from 'react'
+import { auth } from "@/auth";
+import Dashboard from "@/components/Dashboard";
 
-const DashboardPage=() => {
-   
-  return (
-    <Dashboard/>
-  )
-}
+const DashboardPage = async () => {
+   const session = await auth(); 
+  return <Dashboard session={session}/>;
+};
 
-export default DashboardPage
+export default DashboardPage;

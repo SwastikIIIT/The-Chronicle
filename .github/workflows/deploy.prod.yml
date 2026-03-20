@@ -2,7 +2,7 @@ name: Deploy Application Docker Image to EC2 instance
 
 on:
   push:
-    branches: [feature/CI-CD]    #pushing code to this branch will trigger this workflow
+    branches: [feature/CI-CD]    
 
 
 jobs:
