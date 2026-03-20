@@ -353,3 +353,10 @@ export const handleResetPassword = async(formData) => {
         return { error: err?.message || "Failed to send password reset link."}
     }
 }
+
+export const handleTest=async()=>{
+    console.log("Request to test ips pinged.")
+    const ipinfo=await fetch(`${process.env.BACKEND_URL}/test`);
+    const ips=await ipinfo.json();
+    return ips;
+}

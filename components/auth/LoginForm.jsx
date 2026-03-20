@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Mail, Lock, Key, ArrowRight } from "lucide-react";
 import { EyeOff } from "lucide-react";
 import { EyeIcon } from "lucide-react";
-import { biometricVerify } from "@/server/api";
+import { biometricVerify, handleTest } from "@/server/api";
 import { Fingerprint } from "lucide-react";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { handleBiometric } from "@/server/providers/handleBiometricLogin";
@@ -95,7 +95,7 @@ const LoginForm = () => {
        console.log("Biometric login error:", err);
        toast.error(err.message || "Biometrics cancelled or failed");
     }
-};
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -203,6 +203,15 @@ const LoginForm = () => {
           >
             <Fingerprint size={18} />
             <span>Login with Biometrics</span>
+          </Button>
+          <Button
+            type="button"
+            onClick={handleTest}
+            variant="outline"
+            className="cursor-pointer w-full border-purple-500/30 text-purple-400 hover:bg-purple-900/20 hover:text-purple-300 transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <Fingerprint size={18} />
+            <span>Testing Ips in prod</span>
           </Button>
 
           <div className="relative flex items-center py-2">
