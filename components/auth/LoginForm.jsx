@@ -204,15 +204,6 @@ const LoginForm = () => {
             <Fingerprint size={18} />
             <span>Login with Biometrics</span>
           </Button>
-          <Button
-            type="button"
-            onClick={handleTest}
-            variant="outline"
-            className="cursor-pointer w-full border-purple-500/30 text-purple-400 hover:bg-purple-900/20 hover:text-purple-300 transition-all duration-300 flex items-center justify-center gap-2"
-          >
-            <Fingerprint size={18} />
-            <span>Testing Ips in prod</span>
-          </Button>
 
           <div className="relative flex items-center py-2">
             <div className="flex-grow border-t border-purple-900/40"></div>

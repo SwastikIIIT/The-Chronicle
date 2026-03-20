@@ -18,11 +18,16 @@ class Blockchain {
  *   networkName: string;
  *   chainId: string;
  *   history: any[];
+ * }|{
+ *   success:boolean;
+ *   reason:string;
  * }>}
  */
   async connectToWeb3(){
-      if(typeof window.ethereum==='undefined' || !window.ethereum)
-        throw new Error("MetaMask is not installed. Please install it to use the Decentralized Vault");
+      // Normal error -> Proper User Interface
+      if(typeof window.ethereum==='undefined' || !window.ethereum){
+         return {success:false,reason:'not-found'};
+      }
 
       try {
           this.provider = new ethers.BrowserProvider(window.ethereum);
@@ -54,7 +59,7 @@ class Blockchain {
       } catch (error) {
         console.log(error);
         if(error.code === -32002) throw new Error("Connection request already pending. Please check MetaMask and approve the connection.");
-        if (error.code === 4001) throw new Error("Connection rejected by user.");
+        if (error.reason==='rejected' || error.code === 4001) return {success:false,reason:'rejected'};
         throw new Error(error?.message || "Failed to connect to web3");
       }
   } 
@@ -62,7 +67,7 @@ class Blockchain {
  /**
  * Get account information.
  * @param {string} account - Ethereum account address.
- * @returns {Array<{
+ * @returns {Promise<Array<{
  *   from: string;
  *   to: string;
  *   transactionHash: string;
@@ -75,7 +80,7 @@ class Blockchain {
  *   fee: string;
  *   type: string;
  *   status: string;
- * }>}
+ * }>>}
  */
   async getHistory (account){
       if(!this.provider || !this.network) return [];
@@ -155,7 +160,7 @@ class Blockchain {
   /**
    * Deleting file from blockchain
    * @param {string} fileDBId 
-   * @returns {Boolean}
+   * @returns {Promise<Boolean>}
    */
   async deleteFromBlockchain(fileDBId){
     try{
