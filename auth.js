@@ -25,13 +25,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       async authorize(credentials, req) {
         const userAgent = req.headers.get("user-agent");
+        const clientIp=req.headers['x-forwarded-for'] || req.headers['x-real-ip'];
+        console.log("Client Ip:",clientIp);
 
         if(credentials.isBiometric==="true") {
           const res=await fetch(`${process.env.BACKEND_URL}/api/auth/biometric/login`, {
             method: "POST",
             headers: { 
               "Content-type": "application/json",
-              "User-Agent": userAgent
+              "User-Agent": userAgent,
+              'x-client-ip':clientIp,
            },
             body: JSON.stringify({
                 email: credentials.email,
