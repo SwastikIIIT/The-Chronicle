@@ -14,7 +14,7 @@ const Footer = () => {
           <div className="md:col-span-2">
             <h3 className="text-2xl font-bold text-white mb-4">The Chronicle</h3>
             <p className="text-gray-400 max-w-md mb-6">
-              Secure, scalable, and safe security system for modern applications. 
+              Secure, scalable, and safe security system for modern assets management. 
               Built by Swastik Sharma.
             </p>
             <div className="flex space-x-4">

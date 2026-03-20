@@ -6,11 +6,7 @@ import {
   FileText,
   ShieldCheck,
   HardDrive,
-  Plus,
-  Search,
-  FileIcon,
-  ExternalLink,
-  Trash2,
+  Plus
 } from "lucide-react";
 import {
   Card,
@@ -27,8 +23,8 @@ import Table from "./web3/Table";
 import blockchain from "@/services/blockchain";
 import { deleteFileData, uploadedFileInfo, uploadToIPFS } from "@/server/web3.api";
 import FileLayout from "./web3/FileLayout";
-import Encryption from "@/services/encryption";
-import { decryptAESKeyWithLit, encryptAesKeywithLit } from "@/helper/Lit";
+import PromptScreen from "./web3/PromptScreen";
+import { Button } from "./ui/button";
 
 
 const Info = [
@@ -59,6 +55,7 @@ const Vault = () => {
   const [web3Info, setWeb3Info] = useState({});
   const [fileMetadata, setFileMetaData] = useState([]);
   const [history, setHistory] = useState([]);
+  const [providerStatus,setProviderStatus]=useState('checking');
 
   const [step,setStep]=useState('IDLE');
   const [isLoading, setIsLoading] = useState(false);
@@ -69,38 +66,53 @@ const Vault = () => {
       setIsLoading(true);
       try {
         const result = await blockchain.connectToWeb3();
+        console.log("Result:",result);
         const fileMetadata=await uploadedFileInfo();
         if (result.success) {
           setWeb3Info(result);
           setHistory(result.history);
           setFileMetaData(fileMetadata);
+          setProviderStatus('connected');
           toast.success("Wallet Linked", {
             description: `Connected to ${result.account.slice(0, 7)}...${result.account.slice(-5)}`,
           });
+          
+          window.ethereum.on("accountsChanged", (accounts) => {
+          if (accounts.length > 0) {
+            setupWeb3();
+            toast.info("Account Switched");
+          } else {
+            setWeb3Info({});
+            setProviderStatus('connected');
+            toast.error("Wallet Disconnected");
+          }
+        });
+
+        window.ethereum.on("chainChanged", () => {
+          window.location.reload();
+        });
+        }
+        else{
+          setProviderStatus(result.reason);
         }
       } catch (err) {
         console.log("Error while setting up web3:", err);
-        toast.error("Web3 Error", { description: err.message });
+        toast.error("Error", { description: err.message });
       } finally {
         setIsLoading(false);
       }
     };
     setupWeb3();
-
-    window.ethereum.on("accountsChanged", (accounts) => {
-      if (accounts.length > 0) {
-        setupWeb3();
-        toast.info("Account Switched");
-      } else {
-        setWeb3Info({});
-        toast.error("Wallet Disconnected");
-      }
-    });
-
-    window.ethereum.on("chainChanged", () => {
-      window.location.reload();
-    });
   }, []);
+
+  // useEffect(()=>{
+  //   if(providerStatus==='rejected'){
+      
+      
+  //   }
+  // },[providerStatus]);
+
+  console.log(providerStatus);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -123,7 +135,7 @@ const Vault = () => {
   
     setIsLoading(true);
     try {
-      setStep('UPLOAD_BLOCKCHAIN');
+      // setStep('UPLOAD_BLOCKCHAIN');
       const result = await uploadToIPFS(web3Info.account,web3Info.chainId,file);
       console.log("Result from IPFS upload:", result);
       await blockchain.saveToBlockchain(result.cid,result.cipher,result.digest,result.metaInfo.fileDBId);
@@ -144,7 +156,7 @@ const Vault = () => {
   const handleDelete=async(metaData)=>{
       setIsLoading(true);
       try{
-          setStep("DELETE_IPFS_AND_BLOCKCHAIN");
+          // setStep("DELETE_IPFS_AND_BLOCKCHAIN");
           const result=await deleteFileData(metaData);
           setFileMetaData((prev)=>{
             const filtered=prev.filter((item)=>item.fileDBId!=metaData.fileDBId)
@@ -163,7 +175,7 @@ const Vault = () => {
       }
   }
 
-  if (isLoading) {
+  if (isLoading || providerStatus==='checking') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center z-50">
         <motion.div
@@ -173,11 +185,59 @@ const Vault = () => {
         />
         <p className="mt-4 text-purple-500/80 font-mono text-sm animate-pulse"> 
           {isLoading && "Loading..."}
+          {providerStatus==='rejected' && 'Connection cancelled. Reloading...'}
           {/* {isLoading && step==="UPLOAD_IPFS" && "Uploading to IPFS..."}
           {isLoading && step==='SAVE_BLOCKCHAIN' && "Saving on blockchain..."}
           {isLoading && step==='DELETE_IPFS_AND_DB' && "Deleting records from IPFS and DB..."} */}
         </p>
       </div>
+    );
+  }
+
+  if(providerStatus==='rejected'){
+    return<>
+       <div className="flex h-screen items-center justify-center bg-black overflow-hidden">
+      <div className="absolute h-64 w-64 rounded-full bg-purple-600/10 blur-[120px]" />
+      
+      <div className="relative z-10 text-center">
+        <motion.h1 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-6xl md:text-8xl font-bold text-white tracking-tighter"
+        >
+          Connection Cancelled.
+        </motion.h1>
+        
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-purple-500 font-mono text-sm tracking-[0.3em] uppercase mt-2"
+        >
+          You declined the Metamask response.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-8"
+        >
+          <Button
+            onClick={()=>window.location.reload()} 
+            className="cursor-pointer text-zinc-500 hover:text-white transition-colors text-xs uppercase tracking-widest border-b border-zinc-800 pb-1"
+          >
+            Retry to connect wallet
+          </Button>
+        </motion.div>
+      </div>
+    </div>
+    </>
+  }
+
+  if(providerStatus==='not-found'){
+    return(
+      <PromptScreen/>
     );
   }
 
