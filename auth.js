@@ -2,6 +2,20 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
+import { headers } from "next/headers";
+
+async function agent_Ip(headersList){
+        const userAgent = headersList.get("user-agent");
+        
+        const forwardedFor = headersList.get('x-forwarded-for');
+        const realIp = headersList.get('x-real-ip');
+        const clientIp = forwardedFor?.split(',')[0]?.trim() || realIp;
+        console.log("User Agent:",userAgent);
+        console.log("Client Ip:",clientIp);
+        console.log("Farwarded for:",forwardedFor);
+        console.log("Real Ip:",realIp);
+        return {userAgent,clientIp};
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -24,17 +38,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
 
       async authorize(credentials, req) {
-        const userAgent = req.headers.get("user-agent");
-        const clientIp=req.headers['x-forwarded-for'] || req.headers['x-real-ip'];
-        console.log("Client Ip:",clientIp);
+        const headersList = await headers(); 
+        const {userAgent,clientIp}=await agent_Ip(headersList);
 
         if(credentials.isBiometric==="true") {
           const res=await fetch(`${process.env.BACKEND_URL}/api/auth/biometric/login`, {
             method: "POST",
             headers: { 
               "Content-type": "application/json",
-              "User-Agent": userAgent,
-              'x-client-ip':clientIp,
+              "x-chronicle-ua": userAgent,
+              'x-chronicle-client-ip':clientIp,
            },
             body: JSON.stringify({
                 email: credentials.email,
@@ -51,7 +64,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           method: "POST",
           headers: {
             "Content-type": "application/json",
-            "User-Agent": userAgent,
+            "x-chronicle-ua": userAgent,
+            'x-chronicle-client-ip':clientIp,
           },
           body: JSON.stringify({
             email: credentials.email,
@@ -86,6 +100,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log("Account in signIn callback:", account);
       console.log("Profile in signIn callback:", profile);
 
+      const headersList = await headers(); 
+      const {userAgent,clientIp}=await agent_Ip(headersList);
+
       if(account?.provider==="google") {
         try {
             const { email, name, picture, sub } = profile;
@@ -95,6 +112,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             method: "POST",
             headers: {
               "Content-type": "application/json",
+              "x-chronicle-ua": userAgent,
+              'x-chronicle-client-ip':clientIp,
             },
             body: JSON.stringify({
               email,
@@ -132,6 +151,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             method: "POST",
             headers: {
               "Content-type": "application/json",
+              "x-chronicle-ua": userAgent,
+              'x-chronicle-client-ip':clientIp
             },
             body: JSON.stringify({
               email,
