@@ -1,5 +1,6 @@
 'use server'
 import { cookies } from "next/headers";
+import { headers } from 'next/headers'
 
 export async function getCookies(){
      const Cookies = await cookies();
@@ -354,9 +355,25 @@ export const handleResetPassword = async(formData) => {
     }
 }
 
-export const handleTest=async()=>{
+export const handleTest=async(req)=>{
     console.log("Request to test ips pinged.")
-    const ipinfo=await fetch(`${process.env.BACKEND_URL}/test`);
+
+    const headersList = await headers();
+    const forwardedFor = headersList.get('x-forwarded-for');
+    const realIp = headersList.get('x-real-ip');
+
+    console.log("Farwared for:",forwardedFor);
+    console.log("Real Ip:",realIp);
+
+    const clientIp=forwardedFor?.split(',')[0]?.trim() || realIp;
+    
+    console.log("Extracted Client IP in Next.js:", clientIp);
+    
+    const ipinfo=await fetch(`${process.env.BACKEND_URL}/test`,{
+      method:'GET',
+      headers:{
+        'x-chronicle-client-ip':clientIp
+      }});
     const ips=await ipinfo.json();
     return ips;
 }
