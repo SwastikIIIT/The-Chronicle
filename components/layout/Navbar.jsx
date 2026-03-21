@@ -28,7 +28,7 @@ const Navbar = ({ session }) => {
   const [activeTab, setActiveTab] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
-  console.log("Session from Navbar", session);
+  // console.log("Session from Navbar", session);
 
   const signout = async () => {
     const toastID = toast.loading("Logging out...");

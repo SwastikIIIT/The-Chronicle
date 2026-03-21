@@ -371,12 +371,12 @@ const Vault = () => {
                           or drag and drop
                         </p>
                         <p className="text-xs text-zinc-500 mt-2">
-                          Max file size: 4.5MB per transaction (pdf)
+                          Max file size: 4.5MB per transaction (Pdfs,images,excel documents)
                         </p>
                       </div>
                       <input
                         type="file"
-                        accept=".pdf"
+                        accept=".pdf,.png,.jpeg,.jpg,.webp,.xlsx,.csv"
                         onChange={handleFileChange}
                         className="hidden"
                       />
