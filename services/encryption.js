@@ -4,9 +4,7 @@ import { createLitClient } from "@lit-protocol/lit-client";
 import { createAccBuilder } from "@lit-protocol/access-control-conditions";
 import { createAuthManager, storagePlugins } from "@lit-protocol/auth";
 import crypto from "crypto";
-import { bufferToHex } from "ethereumjs-util";
 import { createWalletClient, custom, getAddress } from "viem";
-import { sepolia } from 'viem/chains'
 
 
 // Elliptic Curve cryptography

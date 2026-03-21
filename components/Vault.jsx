@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { calcSize, cn, timeAgo } from "@/lib/utils";
+import { calcSize, cn } from "@/lib/utils";
 import { Activity } from "lucide-react";
 import Table from "./web3/Table";
 import blockchain from "@/services/blockchain";
@@ -105,14 +105,7 @@ const Vault = () => {
     setupWeb3();
   }, []);
 
-  // useEffect(()=>{
-  //   if(providerStatus==='rejected'){
-      
-      
-  //   }
-  // },[providerStatus]);
-
-  console.log(providerStatus);
+  // console.log(providerStatus);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -156,7 +149,6 @@ const Vault = () => {
   const handleDelete=async(metaData)=>{
       setIsLoading(true);
       try{
-          // setStep("DELETE_IPFS_AND_BLOCKCHAIN");
           const result=await deleteFileData(metaData);
           setFileMetaData((prev)=>{
             const filtered=prev.filter((item)=>item.fileDBId!=metaData.fileDBId)
@@ -379,12 +371,12 @@ const Vault = () => {
                           or drag and drop
                         </p>
                         <p className="text-xs text-zinc-500 mt-2">
-                          Max file size: 10MB per transaction
+                          Max file size: 4.5MB per transaction (pdf)
                         </p>
                       </div>
                       <input
                         type="file"
-                        accept=".pdf,.xlsx,.csv"
+                        accept=".pdf"
                         onChange={handleFileChange}
                         className="hidden"
                       />
