@@ -40,10 +40,10 @@ const Footer = () => {
                 <a href="https://github.com/SwastikIIIT/The-Chronicle" target="_blank" className="text-gray-400 hover:text-purple-400 transition-colors">Source Code</a>
               </li>
               <li>
-                <a href="#" target="_blank" className="text-gray-400 hover:text-purple-400 transition-colors">System Architecture</a>
+                <a href="https://github.com/SwastikIIIT/Backend-chronicle" target="_blank" className="text-gray-400 hover:text-purple-400 transition-colors">System Architecture</a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Security Policy</a>
+                <a href="https://crypto-app-rose-mu.vercel.app/" target="_blank" className="text-gray-400 hover:text-purple-400 transition-colors">CryptoLens</a>
               </li>
             </ul>
           </div>

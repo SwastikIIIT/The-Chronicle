@@ -39,9 +39,16 @@ const FileLayout = ({fileMetadata,handleDelete,chainId,account}) => {
             console.log("Secret Key:",secretKey);
             
             const decryptedBuffer=await Encryption.decryptWithAES(blob,metaData.iv,metaData.authTag,secretKey);
-            const decryptedBlob=new Blob([decryptedBuffer],{type: "application/octet-stream"});
+            const decryptedBlob=new Blob([decryptedBuffer],{type: metaData.type || "application/octet-stream"});
+            
+            const a=document.createElement('a');
             const url=URL.createObjectURL(decryptedBlob);
-            window.open(url, '_blank');
+            document.body.appendChild(a);
+            a.href=url;
+            a.download=metaData.name || `Decentralized-Vault_${Math.random()*100}`;
+            a.click();
+            document.body.removeChild(a);
+            // window.open(url, '_blank');
             window.URL.revokeObjectURL(url);
         }
      }
